@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Whitepaper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}"><span class="nav-icon">✦</span>Donate</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact">
+        <p class="eyebrow">Bitmini whitepaper</p>
+        <h1>Token design, consensus, and security architecture.</h1>
+      </section>
+
+      <section class="stats-bar" aria-label="Bitmini summary metrics">
+        <div class="stat-item">
+          <span class="stat-label">Network</span>
+          <strong>Custom sovereign chain</strong>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Max supply</span>
+          <strong>21,000,000 BMINI</strong>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Genesis reserve</span>
+          <strong>1,000,000 locked</strong>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Validation</span>
+          <strong>PoS / DPoS / PoA</strong>
+        </div>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>1. Network Purpose</h2>
+          <p>
+            Bitmini is built as a self-custody digital value network for wallet onboarding, peer-to-peer transfers,
+            validator participation, and governance without requiring users to depend on a public chain such as Ethereum,
+            Solana, or a centralized exchange wallet. The network’s purpose is to provide a clean user experience while
+            preserving trust, transparency, and complete control over account ownership.
+          </p>
+
+          <h2>2. Token Model</h2>
+          <p>
+            The native asset is BMINI and the platform enforces a hard maximum supply of 21 million tokens. A fixed genesis
+            reserve of 1 million coins remains locked to protect ecosystem stability, preserve treasury runway, and keep
+            the system from over-issuing supply through uncontrolled validation rewards. The remaining supply is governed by
+            policy checks, wallet activity, and referral-driven ecosystem growth, ensuring that every minted unit is traceable
+            and bounded by explicit operational rules.
+          </p>
+
+          <h2>3. Consensus</h2>
+          <p>
+            Bitmini supports mobile-friendly validation modes including Proof of Stake, Delegated Proof of Stake, and Proof
+            of Authority. These modes reduce the energy burden of traditional mining while allowing validator selection,
+            proposer rotation, and reward allocation to remain open and auditable. The system prefers low-friction validation
+            over hardware-heavy participation, which makes it more accessible for everyday users and smaller operators.
+          </p>
+          <ul>
+            <li><strong>PoS:</strong> stake-based validation with low energy use and direct participation rewards</li>
+            <li><strong>DPoS:</strong> delegation model that lets mobile users back trusted validators without running full infrastructure</li>
+            <li><strong>PoA:</strong> authority-based mode for stable throughput during controlled network bootstrap stages</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>4. Security Layer</h2>
+          <ul>
+            <li>Password or seed-phrase based wallet access with encrypted secret storage</li>
+            <li>Session-token authorization required for all write operations</li>
+            <li>Wallet ownership verification on every sensitive request</li>
+            <li>Unique @username handles and identity-derived wallet IDs at registration</li>
+            <li>Self-send blocking, duplicate-payment detection, and protected locked balances</li>
+            <li>Slashing, epoch control, and validator monitoring for stable network behavior</li>
+          </ul>
+
+          <h2>5. Growth System</h2>
+          <p>
+            Referral mechanics are built to encourage real user adoption without overstimulating the supply model. Wallets can
+            invite friends to join the network, receive referral-based rewards, and unlock growth incentives through a progressive
+            reward curve. Invite flow is not blocked after a small count; instead, reward multipliers taper as monthly referral
+            events increase. This preserves open growth while preventing reward systems from overwhelming the token economy.
+          </p>
+          <p>
+            In parallel, users can earn through controlled ad-view incentives and validator participation. The ad pathway uses per-wallet
+            daily limits to reduce abuse, while consensus rewards follow network policy and halving discipline.
+          </p>
+        </article>
+      </section>
+
+      <section class="grid three info-grid">
+        <article class="card detail-card">
+          <h2>Wallet Creation</h2>
+          <p>
+            Users create a wallet by providing their identity profile, unique username handle, email, and password. These inputs
+            generate a wallet address and wallet unique ID that make each account distinct while still keeping onboarding simple.
+          </p>
+          <p>
+            The workflow is optimized for mobile devices so new users can register, back up, and start transacting from a phone
+            without navigating complex desktop-first wallet tooling.
+          </p>
+        </article>
+
+        <article class="card detail-card">
+          <h2>Authorization Model</h2>
+          <p>
+            Access is protected by session-bound tokens and ownership checks. Even when a wallet address is known, no write action is
+            allowed unless the active session matches the correct wallet. This blocks accidental or malicious cross-wallet activity.
+          </p>
+        </article>
+
+        <article class="card detail-card">
+          <h2>Operational Safety</h2>
+          <p>
+            Locked-balance enforcement, duplicate transaction detection, and validator slash events help maintain trust in the ledger.
+            These control points ensure that transaction validity remains tied to wallet state and protocol policy rather than user intent alone.
+          </p>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>6. Governance and Validator Rotation</h2>
+          <p>
+            Governance is centered on validator selection, mining or validation order, epoch transitions, and protocol-grade safety checks.
+            A selected validator set is rotated according to the active epoch, while slash events and validator health are monitored to
+            protect network reliability. This creates a disciplined operating environment for a custom chain without heavy centralization.
+          </p>
+        </article>
+
+        <article class="card">
+          <h2>7. Product Engineering Principles</h2>
+          <p>
+            Bitmini is designed for practical product deployment: it balances onboarding simplicity, wallet security, transaction trust,
+            network visibility, and protocol governance. The system is structured for a web app, mobile wallet interface, and sovereign
+            network runtime without needing to depend on external proof-of-work infrastructure, centralized custody, or third-party chain ecosystems.
+          </p>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>8. Roadmap and Implementation Focus</h2>
+        <ul>
+          <li>Secure wallet registration and encrypted storage for identity-backed accounts</li>
+          <li>Session-based wallet authorization and transaction validation for all sensitive actions</li>
+          <li>Referral incentives and capped reward windows aligned to supply policy</li>
+          <li>Validator rotation, slashing controls, and epoch monitoring for chain health</li>
+          <li>Custom sovereign node integration for wallet and ledger visibility without external validator infrastructure</li>
+          <li>Continued refinement of wallet UX, governance reporting, and on-chain reporting for production readiness</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('guided_tour_page') }}">Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}">Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}">Donate</a>
+        <a href="{{ url_for('wallet_app') }}">Wallet</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>

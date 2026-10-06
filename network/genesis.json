@@ -1,0 +1,18 @@
+{
+  "chain_id": "bitmini-testnet-1",
+  "max_supply": 21000000,
+  "genesis_time": "2026-10-04T00:00:00Z",
+  "governance_address": "BGENESISRESERVE0000000000000001",
+  "validators": [
+    "BGENESISRESERVE0000000000000001"
+  ],
+  "accounts": [
+    {
+      "address": "BGENESISRESERVE0000000000000001",
+      "balance": 1000000.0,
+      "locked_balance": 1000000.0,
+      "nonce": 0,
+      "private_key": "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"
+    }
+  ]
+}

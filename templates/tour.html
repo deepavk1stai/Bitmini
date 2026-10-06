@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Guided Tour</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}"><span class="nav-icon">✦</span>Donate</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact">
+        <p class="eyebrow">Guided product tour</p>
+        <h1>See how Bitmini works from wallet setup to secure participation.</h1>
+        <p class="lead">Bitmini was designed to reduce friction, increase trust, and let people understand how value moves across a custom digital network.</p>
+      </section>
+
+      <section class="stats-bar" aria-label="Bitmini quick summary">
+        <div class="stat-item"><span class="stat-label">Step 1</span><strong>Wallet setup</strong></div>
+        <div class="stat-item"><span class="stat-label">Step 2</span><strong>Secure login</strong></div>
+        <div class="stat-item"><span class="stat-label">Step 3</span><strong>Send & receive</strong></div>
+        <div class="stat-item"><span class="stat-label">Step 4</span><strong>Validate & grow</strong></div>
+      </section>
+
+      <section class="grid four feature-grid">
+        <article class="card">
+          <span class="step-badge">01</span>
+          <h2>Create a wallet</h2>
+          <p>Users create a personal wallet by entering a unique username, email, zip code, date of birth, and secure password. Each identity produces a unique wallet ID so no two accounts are the same.</p>
+        </article>
+        <article class="card">
+          <span class="step-badge">02</span>
+          <h2>Protect access</h2>
+          <p>Wallet secrets are encrypted and session-bound, so writes are secured behind login ownership checks. This prevents silent cross-wallet misuse or unauthorized transfer attempts.</p>
+        </article>
+        <article class="card">
+          <span class="step-badge">03</span>
+          <h2>Move value</h2>
+          <p>Users send and receive BMINI through the wallet, track price movement, and view transaction history in a clean, trust-focused dashboard.</p>
+        </article>
+        <article class="card">
+          <span class="step-badge">04</span>
+          <h2>Activate network roles</h2>
+          <p>Wallets can validate blocks, stake, participate in consensus, and grow participation through referrals or ecosystem contribution.</p>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>Why people trust the flow</h2>
+          <ul>
+            <li>Simple onboarding with identity-based wallet creation</li>
+            <li>Wallet-specific access control and session time limits</li>
+            <li>Protected balance rules and duplicate-spend prevention</li>
+            <li>Supply limits and transparent governance checks</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>What makes it feel modern</h2>
+          <p>Bitmini is designed for a digital world where users expect self-custody, low friction, and honest visibility. Instead of forcing users into rigid finance systems, the platform makes digital value easier to understand and safer to control.</p>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>Modern world problem solved</h2>
+        <p>People want to move value without hidden fees, broker dependence, confusing onboarding, or central control. Bitmini solves this by combining wallet simplicity, transparent economic controls, and a clear operating model that is meant to be trusted by everyday users and early supporters alike.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('guided_tour_page') }}">Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}">Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}">Donate</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>

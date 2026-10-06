@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Bitmini digital currency homepage with wallet access, whitepaper, and security layers." />
+    <title>Bitmini | Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills">
+        <a href="#what"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="#problems"><span class="nav-icon">◎</span>Problems</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">↗</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}"><span class="nav-icon">✦</span>Donate</a>
+        <a class="cta" href="#existing-user"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      {% if login_required %}
+      <section class="alert-banner">
+        <strong>Wallet access required:</strong> please log in or create a wallet before opening the wallet dashboard.
+      </section>
+      {% endif %}
+
+      <section class="hero">
+        <p class="eyebrow">Mobile-first digital currency network</p>
+        <h1>Bitmini gives everyday people a fairer, simpler way to own and move digital value.</h1>
+        <p class="lead">
+          The modern world is full of high fees, fragmented wallets, weak access control, and confusing finance products. Bitmini solves that with a wallet-first, self-custody system designed for real users, early supporters, and transparent network growth.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#new-user">Create New Wallet</a>
+          <a class="button ghost" href="#existing-user">Open Wallet Login</a>
+        </div>
+      </section>
+
+      <section class="stats-bar" aria-label="Bitmini summary metrics">
+        <div class="stat-item"> <span class="stat-label">Max supply</span> <strong>21,000,000 BMINI</strong> </div>
+        <div class="stat-item"> <span class="stat-label">Genesis reserve</span> <strong>1,000,000 locked</strong> </div>
+        <div class="stat-item"> <span class="stat-label">Validation modes</span> <strong>PoS, DPoS, PoA</strong> </div>
+        <div class="stat-item"> <span class="stat-label">Support model</span> <strong>Ethical growth</strong> </div>
+      </section>
+
+      <section class="grid three info-grid" id="validation-modes">
+        <article class="card detail-card">
+          <h2>PoS: stake and validate</h2>
+          <p>Proof of Stake lets users help secure the network by staking coins. It is energy-light, mobile-friendly, and rewards participants for honest validator behavior over time.</p>
+        </article>
+        <article class="card detail-card">
+          <h2>DPoS: delegate with ease</h2>
+          <p>Delegated Proof of Stake allows everyday holders to delegate to trusted validators from a phone. It keeps participation simple while preserving transparent validator accountability.</p>
+        </article>
+        <article class="card detail-card">
+          <h2>PoA: stable throughput</h2>
+          <p>Proof of Authority is useful for controlled bootstrap phases and reliable network throughput. It helps deliver predictable confirmations during early growth cycles.</p>
+        </article>
+      </section>
+
+      <section class="card" id="phaseA">
+        <p class="eyebrow">Launch status</p>
+        <div class="grid two">
+          <div>
+            <h2>Phase B: seed network bootstrap</h2>
+            <p>
+              This release adds the public seed-node and peer bootstrap layer so wallet users can discover live network endpoints and validator nodes.
+            </p>
+          </div>
+          <div id="phaseAStatus" class="phase-box">
+            <div class="phase-badge">Loading launch metadata…</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid two" id="what">
+        <article class="card">
+          <h2>What problem Bitmini solves</h2>
+          <p>
+            Millions of people still deal with expensive moving parts, unclear ownership, poor onboarding, and central points of failure. Bitmini was designed to solve that by combining wallet simplicity with transparent network rules, self-custody, and accessible participation.
+          </p>
+          <ul>
+            <li>Expensive transfers and confusing money rails</li>
+            <li>Opaque governance and limited account control</li>
+            <li>Hard-to-understand digital value experiences</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>Why Bitmini is attractive</h2>
+          <p>
+            It makes digital value feel human: easier to set up, easier to use, easier to trust, and easier to explain. With wallet-first onboarding, transparent supply rules, and strong security checks, it is built to win confidence and adoption.
+          </p>
+          <a class="button primary" href="{{ url_for('whitepaper_page') }}">Read Whitepaper</a>
+        </article>
+      </section>
+
+      <section class="grid three solution-grid" id="problems">
+        <article class="card">
+          <span class="step-badge">A</span>
+          <h2>Self-custody</h2>
+          <p>People keep control over their wallets instead of handing access to centralized middlemen or brittle setups.</p>
+        </article>
+        <article class="card">
+          <span class="step-badge">B</span>
+          <h2>Accessible validation</h2>
+          <p>Proof-of-stake and delegation-based consensus lowers friction and helps users participate in network health without heavy hardware demands.</p>
+        </article>
+        <article class="card">
+          <span class="step-badge">C</span>
+          <h2>Transparent economics</h2>
+          <p>Supply, reserve, reward cycles, and referral logic are built to be understood, monitored, and adjusted responsibly.</p>
+        </article>
+      </section>
+
+      <section class="grid two access" id="new-user">
+        <article class="card">
+          <h2>New User Wallet Setup</h2>
+          <form id="registerForm" class="stack">
+            <label>Full name <input id="registerName" type="text" placeholder="Jane Doe" required /></label>
+            <label>Username <input id="registerUsername" type="text" pattern="@[A-Za-z0-9._\-]{3,24}" placeholder="@jane2026" required /></label>
+            <label>Date of birth <input id="registerDob" type="date" required /></label>
+            <label>Zipcode <input id="registerZip" type="text" pattern="[0-9A-Za-z\- ]{3,12}" placeholder="10001" required /></label>
+            <label>Email <input id="registerEmail" type="email" placeholder="jane@example.com" required /></label>
+            <label>Create password <input id="registerPassword" type="password" minlength="8" placeholder="At least 8 characters" required /></label>
+            <label>Referral code (optional) <input id="registerReferralCode" type="text" placeholder="RABCDEFG1" /></label>
+            <button class="button primary" type="submit">Create Wallet</button>
+            <p class="hint">Wallet file download starts after registration. You are logged in immediately.</p>
+          </form>
+        </article>
+
+        <article class="card" id="existing-user">
+          <h2>Existing Wallet Access</h2>
+          <form id="loginForm" class="stack">
+            <label>Wallet address <input id="loginWalletAddress" type="text" placeholder="B..." /></label>
+            <p class="hint">Or login with @username</p>
+            <label>Username <input id="loginUsername" type="text" pattern="@[A-Za-z0-9._\-]{3,24}" placeholder="@jane2026" /></label>
+            <label>Security method
+              <select id="loginMethod">
+                <option value="password">Password</option>
+                <option value="seed_phrase">Seed phrase</option>
+              </select>
+            </label>
+            <label>Secret <input id="loginSecret" type="password" placeholder="Enter password or seed phrase" required /></label>
+            <button class="button primary" type="submit">Access Wallet</button>
+            <p class="hint">Session tokens are bound to wallet ownership and required for all write actions.</p>
+          </form>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>Mobile wallet handling and earnings</h2>
+          <p>Bitmini is designed so users can register, secure, send, receive, and monitor wallets directly from mobile devices. Earning paths are built into normal usage so growth can happen without technical complexity.</p>
+          <ul>
+            <li>Watch-ads rewards with daily wallet limits for anti-spam control</li>
+            <li>Referral payouts for onboarding real users into the network</li>
+            <li>Validation rewards through PoS, DPoS, and PoA participation</li>
+            <li>Simple wallet actions optimized for phone-first use</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>Progressive referral rewards</h2>
+          <p>Users are not hard-limited to a small monthly invite count. Instead, Bitmini uses a progressive reward curve: invites can continue, while payout multipliers taper as monthly referral volume increases. This keeps growth open and discourages reward abuse.</p>
+          <div class="reward-ladder" aria-label="Referral reward ladder">
+            <div class="reward-ladder-head">
+              <span>Monthly referral events</span>
+              <span>Payout multiplier</span>
+            </div>
+            <div class="reward-ladder-row"><span>1-3</span><strong>x1.00</strong></div>
+            <div class="reward-ladder-row"><span>4-10</span><strong>x0.85</strong></div>
+            <div class="reward-ladder-row"><span>11-25</span><strong>x0.65</strong></div>
+            <div class="reward-ladder-row"><span>26+</span><strong>x0.40</strong></div>
+          </div>
+          <a class="button ghost" href="#existing-user">View Referral Dashboard</a>
+        </article>
+      </section>
+
+      <section class="grid two" id="community-live">
+        <article class="card">
+          <h2>Top Earners</h2>
+          <p>Live ranking based on referral earnings plus validated and mined activity.</p>
+          <div id="homepageTopEarners" class="rank-list" aria-live="polite">
+            <article class="mini-card"><h3>Loading...</h3></article>
+          </div>
+        </article>
+        <article class="card">
+          <h2>Recent Transactions</h2>
+          <p>The latest 10 ledger transactions across the Bitmini network.</p>
+          <div id="homepageTransactions" class="tx-list" aria-live="polite">
+            <article class="mini-card"><h3>Loading...</h3></article>
+          </div>
+        </article>
+      </section>
+
+      <section class="card" id="security">
+        <h2>Security Layer</h2>
+        <div class="grid four" id="securityLayers">
+          <article class="mini-card"><h3>Loading...</h3></article>
+        </div>
+        <p class="security-note">
+          No one can send from another wallet because each write request is checked against an authenticated session tied to a single wallet address.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('whitepaper_page') }}">Whitepaper</a>
+        <a href="{{ url_for('wallet_app') }}">Wallet</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+
+    <script src="{{ url_for('static', filename='home.js') }}"></script>
+  </body>
+</html>

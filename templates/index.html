@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Bitmini wallet and payment platform for secure, mobile-first digital asset management."
+    />
+    <title>Bitmini | Wallet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=bitmini-qr-v2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="main-topbar">
+        <a class="brand-row" href="{{ url_for('home') }}" aria-label="Bitmini home">
+          <img class="logo-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+          <div>
+            <p class="eyebrow">Digital currency</p>
+            <h1>Bitmini</h1>
+          </div>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="home"><span class="nav-icon">⌂</span><span>Home</span></button>
+          <button class="nav-item" data-view="wallet"><span class="nav-icon">◈</span><span>Wallet</span></button>
+          <button class="nav-item" data-view="mine"><span class="nav-icon">◎</span><span>Validate</span></button>
+          <button class="nav-item" data-view="send"><span class="nav-icon">↗</span><span>Send</span></button>
+          <button class="nav-item" data-view="receive"><span class="nav-icon">↙</span><span>Receive</span></button>
+          <button class="nav-item" data-view="ads"><span class="nav-icon">▶</span><span>Ads</span></button>
+          <button class="nav-item" data-view="referrals"><span class="nav-icon">✦</span><span>Referrals</span></button>
+          <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
+        </nav>
+
+        <div class="top-actions">
+          <button class="ghost-button" id="addWallet">+ Add</button>
+          <button class="primary-button" id="headerSend">Send</button>
+        </div>
+      </header>
+
+      <div class="workspace-shell">
+        <aside class="sidebar">
+          <div class="security-card">
+            <div class="card-head">
+              <span class="status-dot success"></span>
+              <span>Security</span>
+            </div>
+            <strong>Protected</strong>
+            <p>3-factor safety checks active</p>
+          </div>
+        </aside>
+
+        <main class="main-panel">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow muted">Portfolio</p>
+              <h2 id="pageTitle">Bitmini Wallet</h2>
+            </div>
+            <div class="topbar-actions">
+              <button class="ghost-button" id="backButton" type="button" aria-label="Go back">← Back</button>
+              <button class="ghost-button" id="homeButton" type="button" aria-label="Go to home">⌂ Home</button>
+            </div>
+          </header>
+
+          <div id="appView"></div>
+        </main>
+      </div>
+
+      <footer class="site-footer">
+        <div class="site-footer-brand">
+          <img class="logo-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+          <span>Bitmini</span>
+        </div>
+        <nav class="site-footer-nav" aria-label="Footer navigation">
+          <a href="{{ url_for('home') }}">Home</a>
+          <a href="{{ url_for('wallet_app') }}">Wallet</a>
+          <a href="{{ url_for('whitepaper_page') }}">Whitepaper</a>
+        </nav>
+        <span class="footer-copy">© 2026 Bitmini</span>
+      </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}?v=bitmini-qr-v2"></script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+test_name,status,file,progress
+test_wallet_endpoint_returns_zero_balance,PASSED,tests/test_app.py::,  3%
+test_market_price_rises_from_user_purchases,PASSED,tests/test_app.py::,  6%
+test_market_price_ladder_rises_by_1x_each_10000_tokens,PASSED,tests/test_app.py::,  9%
+test_sell_and_withdrawal_rails_exist_and_work,PASSED,tests/test_app.py::, 12%
+test_purchase_rejects_non_minted_supply,PASSED,tests/test_app.py::, 15%
+test_admin_dashboard_requires_admin_role,PASSED,tests/test_app.py::, 18%
+test_admin_can_approve_a_pending_withdrawal,PASSED,tests/test_app.py::, 21%
+test_admin_can_reject_a_pending_withdrawal,PASSED,tests/test_app.py::, 24%
+test_network_validator_update_route_requires_admin_and_node_rpc,PASSED,tests/test_app.py::, 27%
+test_genesis_locked_balance_is_untouchable,PASSED,tests/test_app.py::, 30%
+test_register_requires_identity_fields_and_creates_unique_wallet_id,PASSED,tests/test_app.py::, 33%
+test_username_must_be_unique,PASSED,tests/test_app.py::, 36%
+test_login_accepts_username_handle,PASSED,tests/test_app.py::, 39%
+test_write_endpoints_require_authenticated_session,PASSED,tests/test_app.py::, 42%
+test_authenticated_mine_and_send_flow,PASSED,tests/test_app.py::, 45%
+test_duplicate_payment_is_rejected,PASSED,tests/test_app.py::, 48%
+test_self_send_is_rejected,PASSED,tests/test_app.py::, 51%
+test_wallet_download_requires_auth_and_returns_encrypted_payload,PASSED,tests/test_app.py::, 54%
+test_purchase_requires_real_money_integration,PASSED,tests/test_app.py::, 57%
+test_sqlite_persistence_reload_keeps_registered_wallet,PASSED,tests/test_app.py::, 60%
+test_token_metrics_endpoint_returns_supply_and_activity_counters,PASSED,tests/test_app.py::, 63%
+test_phase_a_public_testnet_metadata_is_exposed,PASSED,tests/test_app.py::, 66%
+test_phase_b_seed_and_peer_bootstrap_metadata_is_exposed,PASSED,tests/test_app.py::, 69%
+test_referral_signup_bonus_requires_first_transfer_activation,PASSED,tests/test_app.py::, 72%
+test_referral_monthly_cap_limits_purchase_bonus,PASSED,tests/test_app.py::, 75%
+test_end_to_end_positive_wallet_flow_and_real_transactions,PASSED,tests/test_full_app_suite.py::, 78%
+test_negative_wallet_security_and_admin_guardrails,PASSED,tests/test_full_app_suite.py::, 81%
+test_multiple_node_instances_register_peers_and_report_health,PASSED,tests/test_full_app_suite.py::, 84%
+test_persistence_and_network_metadata_are_consistent,PASSED,tests/test_full_app_suite.py::, 87%
+test_node_initializes_from_genesis_and_metrics,PASSED,tests/test_network_node.py::, 90%
+test_locked_balance_blocks_overspending,PASSED,tests/test_network_node.py::, 93%
+test_submit_transaction_and_mine_block_updates_state,PASSED,tests/test_network_node.py::, 96%
+test_validator_governance_and_rotation,PASSED,tests/test_network_node.py::,100%

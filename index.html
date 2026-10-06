@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Bitmini wallet and payment web app MVP for mobile-first crypto management."
+    />
+    <title>Bitmini | Wallet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <div class="logo-mark">B</div>
+          <div>
+            <p class="eyebrow">Digital currency</p>
+            <h1>Bitmini</h1>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="home">Home</button>
+          <button class="nav-item" data-view="wallet">Wallet</button>
+          <button class="nav-item" data-view="send">Send</button>
+          <button class="nav-item" data-view="receive">Receive</button>
+          <button class="nav-item" data-view="buy-sell">Buy / Sell</button>
+          <button class="nav-item" data-view="activity">Activity</button>
+          <button class="nav-item" data-view="markets">Markets</button>
+          <button class="nav-item" data-view="contacts">Contacts</button>
+          <button class="nav-item" data-view="settings">Settings</button>
+        </nav>
+
+        <div class="security-card">
+          <div class="card-head">
+            <span class="status-dot success"></span>
+            <span>Security</span>
+          </div>
+          <strong>Protected</strong>
+          <p>3-factor safety checks active</p>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow muted">Portfolio</p>
+            <h2 id="pageTitle">Bitmini Wallet</h2>
+          </div>
+          <div class="top-actions">
+            <button class="ghost-button" id="addWallet">+ Add</button>
+            <button class="primary-button" id="headerSend">Send</button>
+          </div>
+        </header>
+
+        <div id="appView"></div>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

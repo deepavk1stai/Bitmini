@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Support the Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}"><span class="nav-icon">✦</span>Donate</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact donor-hero">
+        <p class="eyebrow">Support the mission</p>
+        <h1>Back the network that makes fairer digital value possible.</h1>
+        <p class="lead">Bitmini is building a user-first wallet, sovereign network model, and transparent economic layer for the next generation of digital value. Your support helps accelerate wallet launch readiness, network testing, validator onboarding, security audits, and public rollout planning.</p>
+      </section>
+
+      <section class="stats-bar">
+        <div class="stat-item"><span class="stat-label">Funding focus</span><strong>Security & testing</strong></div>
+        <div class="stat-item"><span class="stat-label">Donor tiers</span><strong>4 recognition levels</strong></div>
+        <div class="stat-item"><span class="stat-label">Benefits</span><strong>Priority access</strong></div>
+        <div class="stat-item"><span class="stat-label">Governance</span><strong>Advisory authority</strong></div>
+      </section>
+
+      <section class="grid three donor-grid">
+        <article class="card donor-card">
+          <span class="tier-label">Tier 1</span>
+          <h2>Mission Supporter</h2>
+          <div class="price">$250+</div>
+          <ul>
+            <li>Recognition on the public supporter wall</li>
+            <li>Early product updates and roadmap access</li>
+            <li>Priority wallet onboarding and beta access</li>
+          </ul>
+        </article>
+        <article class="card donor-card highlight-card">
+          <span class="tier-label">Tier 2</span>
+          <h2>Network Builder</h2>
+          <div class="price">$5,000+</div>
+          <ul>
+            <li>Governance advisory status</li>
+            <li>Large donor badge and recognition</li>
+            <li>Milestone briefings and private review sessions</li>
+          </ul>
+        </article>
+        <article class="card donor-card">
+          <span class="tier-label">Tier 3</span>
+          <h2>Strategic Contributor</h2>
+          <div class="price">$25,000+</div>
+          <ul>
+            <li>Priority review rights on key roadmap decisions</li>
+            <li>Large-holder coin-share eligibility pathway</li>
+            <li>Invitation to the donor governance forum</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>Why support Bitmini</h2>
+          <p>Supporters are helping build a network that values user trust, transparency, and responsible growth. Your contribution helps finance wallet launch readiness, public testing, validator onboarding, security review, and core infrastructure decisions that make the ecosystem stronger and easier to use.</p>
+          <ul>
+            <li>Funds essential wallet and network testing</li>
+            <li>Accelerates security and validator readiness</li>
+            <li>Supports product launch and public onboarding</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>Large coin share and donor authority</h2>
+          <p>Major supporters can be eligible for reserved allocation pathways, donor recognition, and strategic influence that is proportional to long-term contribution and aligned with transparent governance rules. This structure rewards meaningful backing without disregarding fairness, supply discipline, or ecosystem balance.</p>
+        </article>
+      </section>
+
+      <section class="card donation-form-wrap">
+        <h2>Request donor onboarding</h2>
+        <p class="donation-note">We review all large support requests through a transparent donor intake process. Contributions help fund network development, security, and public launch readiness.</p>
+        <form class="donation-form">
+          <label>Full name <input type="text" placeholder="Your name" /></label>
+          <label>Email <input type="email" placeholder="your@email.com" /></label>
+          <label>Contribution amount <input type="number" min="250" step="50" placeholder="2500" /></label>
+          <label>Support tier
+            <select>
+              <option>Mission Supporter</option>
+              <option>Network Builder</option>
+              <option>Strategic Contributor</option>
+            </select>
+          </label>
+          <label>Notes <textarea rows="4" placeholder="Tell us where you want your support to help most..."></textarea></label>
+          <button class="button primary" type="button">Request donor onboarding</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('guided_tour_page') }}">Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}">Whitepaper</a>
+        <a href="{{ url_for('donation_page') }}">Donate</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>
