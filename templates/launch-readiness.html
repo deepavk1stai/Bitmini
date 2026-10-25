@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Launch Readiness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('terms_page') }}"><span class="nav-icon">⚖</span>Terms</a>
+        <a href="{{ url_for('privacy_page') }}"><span class="nav-icon">🔒</span>Privacy</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact">
+        <p class="eyebrow">Launch readiness snapshot</p>
+        <h1>Public launch is gated by governance, compliance, and deployment controls.</h1>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>Required before launch</h2>
+          <ul>
+            <li>Legal entity, risk controls, and board sign-off</li>
+            <li>KYC / AML / sanctions provider integration</li>
+            <li>Admin governance and approval workflow</li>
+            <li>Database hardening and backup assurance</li>
+            <li>Incident response and monitoring plan</li>
+            <li>Geographic restrictions and regional compliance review</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Product checkpoint</h2>
+          <p>The current project is a controlled beta wallet prototype. It demonstrates a secure architecture, product framing, compliance hooks, and launch controls, but it is not yet ready for unrestricted real-money customer onboarding. The near-term goal is staged launch readiness rather than live public trading.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('compliance_page') }}">Compliance</a>
+        <a href="{{ url_for('terms_page') }}">Terms</a>
+        <a href="{{ url_for('wallet_app') }}">Wallet</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>

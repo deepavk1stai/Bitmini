@@ -68,10 +68,12 @@ def test_wallet_app_requires_valid_session(client):
     assert 'login_required=1' in response.location
 
 
-def test_send_requires_wallet_password_or_seed_phrase(client):
+def test_send_allows_session_auth_when_balance_is_available(client):
     wallet_payload = register_wallet(client, 'Secret User', 'secret@example.com', '@secretuser')
     wallet_address = wallet_payload['wallet']['walletAddress']
     token = wallet_payload['sessionToken']
+    wallets[wallet_address]['balance'] = 10.0
+    wallets[wallet_address]['fiatValue'] = 10.0
 
     response = client.post(
         '/api/send',
@@ -83,8 +85,8 @@ def test_send_requires_wallet_password_or_seed_phrase(client):
         },
         headers={'X-Bitmini-Session': token},
     )
-    assert response.status_code == 401
-    assert 'password' in response.get_json()['error'].lower() or 'seed' in response.get_json()['error'].lower()
+    assert response.status_code == 200
+    assert response.get_json()['recipient'] == 'B8N9xZQ7v4h3mt2v8k1c6f0p9d3q7r4w'
 
 
 def test_market_price_rises_from_user_purchases(client):
@@ -789,3 +791,93 @@ def test_ad_creation_requires_promoter_or_advertiser_category(client):
         },
     )
     assert allowed.status_code == 200
+
+
+def test_kyc_submission_and_admin_review_flow(client):
+    wallet_payload = register_wallet(client, 'KYC User', 'kyc-user@example.com', '@kycuser')
+    wallet_address = wallet_payload['wallet']['walletAddress']
+    token = wallet_payload['sessionToken']
+
+    submit = client.post(
+        '/api/kyc/submit',
+        json={
+            'walletAddress': wallet_address,
+            'country': 'US',
+            'documentType': 'passport',
+            'riskLevel': 'medium',
+        },
+        headers={'X-Bitmini-Session': token},
+    )
+    assert submit.status_code == 200
+    assert submit.get_json()['compliance']['kycStatus'] == 'pending'
+
+    compliance = client.get(f'/api/compliance?address={wallet_address}', headers={'X-Bitmini-Session': token})
+    assert compliance.status_code == 200
+    assert compliance.get_json()['compliance']['kycStatus'] == 'pending'
+
+    admin_payload = register_wallet(client, 'Compliance Admin', 'compliance-admin@example.com', '@complianceadmin')
+    admin_address = admin_payload['wallet']['walletAddress']
+    admin_token = admin_payload['sessionToken']
+    wallets[admin_address]['role'] = 'admin'
+
+    review = client.post(
+        '/api/kyc/review',
+        json={'walletAddress': wallet_address, 'status': 'approved', 'reviewer': 'ops-admin', 'notes': 'KYC passed'},
+        headers={'X-Bitmini-Session': admin_token},
+    )
+    assert review.status_code == 200
+    assert review.get_json()['compliance']['kycStatus'] == 'approved'
+    assert review.get_json()['compliance']['amlStatus'] in ('clear', 'pending')
+
+
+def test_admin_governance_and_launch_readiness_are_exposed(client):
+    user_payload = register_wallet(client, 'Governance User', 'governance-user@example.com', '@govuser')
+    user_address = user_payload['wallet']['walletAddress']
+    user_token = user_payload['sessionToken']
+
+    admin_payload = register_wallet(client, 'Governance Admin', 'governance-admin@example.com', '@govadmin')
+    admin_address = admin_payload['wallet']['walletAddress']
+    admin_token = admin_payload['sessionToken']
+    wallets[admin_address]['role'] = 'admin'
+
+    governance = client.get('/api/admin/governance', headers={'X-Bitmini-Session': admin_token})
+    assert governance.status_code == 200
+    governance_payload = governance.get_json()
+    assert governance_payload['ok'] is True
+    assert 'riskControls' in governance_payload
+    assert 'launchStatus' in governance_payload
+    assert 'checklist' in governance_payload or 'riskControls' in governance_payload
+
+    readiness = client.get('/api/launch/readiness')
+    assert readiness.status_code == 200
+    readiness_payload = readiness.get_json()
+    assert readiness_payload['ok'] is True
+    assert isinstance(readiness_payload['checklist'], list)
+    assert 'legal' in readiness_payload['status'].lower() or 'blocked' in readiness_payload['status'].lower() or 'ready' in readiness_payload['status'].lower()
+
+    risk_policy = client.post(
+        '/api/admin/risk/controls',
+        json={'kycRequired': True, 'amlRequired': True, 'sanctionsRequired': True, 'realMoneyDisabled': True},
+        headers={'X-Bitmini-Session': admin_token},
+    )
+    assert risk_policy.status_code == 200
+    assert risk_policy.get_json()['riskControls']['kycRequired'] is True
+
+    compliance = client.get(f'/api/compliance?address={user_address}', headers={'X-Bitmini-Session': user_token})
+    assert compliance.status_code == 200
+
+
+def test_database_hardening_snapshot_reports_integrity(client):
+    admin_payload = register_wallet(client, 'DB Admin', 'db-admin@example.com', '@dbadmin')
+    admin_address = admin_payload['wallet']['walletAddress']
+    admin_token = admin_payload['sessionToken']
+    wallets[admin_address]['role'] = 'admin'
+
+    response = client.get('/api/admin/db-health', headers={'X-Bitmini-Session': admin_token})
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload['ok'] is True
+    assert 'journalMode' in payload
+    assert 'foreignKeys' in payload
+    assert 'integrityCheck' in payload
+    assert payload['integrityCheck'] in ('ok', 'pass', 'ok-pass')

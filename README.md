@@ -1,6 +1,6 @@
 # Bitmini
 
-Bitmini is a custom blockchain wallet and app experience built around a sovereign token model, encrypted wallet secrets, identity-aware onboarding, and a mobile-first dashboard. The project is structured as a production-oriented foundation that is intentionally honest about what is implemented versus what requires external payment rails or production node infrastructure.
+Bitmini is a custom blockchain wallet and app experience built around a sovereign token model, encrypted wallet secrets, identity-aware onboarding, and a mobile-first dashboard. The project is intentionally structured as a hybrid custody prototype: custodial default for support and recovery, optional self-custody paths for advanced users, and clear boundaries around what remains a beta product versus a regulated launch.
 
 ## Included in this workspace
 
@@ -57,9 +57,15 @@ This is the recommended server layer instead of Flask's built-in development ser
 - Only the genesis wallet holds the admin role by default.
 - Regular wallets cannot access admin endpoints without role assignment.
 - Real-money purchase integrations are intentionally blocked unless a payment provider and operating policy are enabled.
-- All write actions require a valid signed wallet session.
+- All write actions require a valid signed wallet session and, when applicable, explicit wallet authentication.
+- The product follows a staged hybrid custody model rather than claiming full self-custody by default.
+- KYC, AML, sanctions screening, and admin risk controls are exposed as review and governance endpoints.
 - Supply and referral caps are enforced in backend logic.
 - Error responses are standardized and security headers are applied.
+
+## Legal-ready launch boundaries
+
+See [docs/legal-launch-checklist.md](docs/legal-launch-checklist.md) for the launch gates, deployment checklist, and operational boundaries before any live customer rollout.
 
 ## Status
 

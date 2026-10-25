@@ -6,6 +6,8 @@ import os
 import re
 import secrets
 import sqlite3
+import subprocess
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -55,6 +57,7 @@ DEFAULT_CONSENSUS_MODE = "pos"
 DEFAULT_PHASE = "B"
 DEFAULT_TESTNET_STATUS = "seed-network-bootstrap"
 DEFAULT_CHAIN_ID = "bitmini-testnet-1"
+LOCAL_DEVNET_SCRIPT = os.path.join(os.path.dirname(__file__), "network", "local_devnet.py")
 DEFAULT_SEED_NODES = [
     "https://seed-a.bitmini.network",
     "https://seed-b.bitmini.network",
@@ -499,6 +502,92 @@ def node_rpc_enabled():
     return bool(NODE_RPC_URL)
 
 
+def build_local_devnet_command(count=3, base_port=9101, auto_mine=True, duration=8):
+    if not os.path.exists(LOCAL_DEVNET_SCRIPT):
+        return None
+    command = [sys.executable, LOCAL_DEVNET_SCRIPT, "--count", str(int(count or 3)), "--base-port", str(int(base_port or 9101))]
+    if auto_mine:
+        command.append("--auto-mine")
+    if duration is not None:
+        command.extend(["--duration", str(int(duration or 8))])
+    return command
+
+
+def active_local_devnet_processes():
+    alive = []
+    for process in LOCAL_DEVNET_PROCESSES:
+        if process is not None and process.poll() is None:
+            alive.append(process)
+    if len(alive) != len(LOCAL_DEVNET_PROCESSES):
+        LOCAL_DEVNET_PROCESSES[:] = alive
+    return alive
+
+
+def stop_local_devnet():
+    stopped = []
+    for process in list(active_local_devnet_processes()):
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+        stopped.append(process.pid)
+    LOCAL_DEVNET_PROCESSES.clear()
+    return {"ok": True, "stopped": len(stopped), "pids": stopped}
+
+
+def start_local_devnet(count=3, base_port=9101, auto_mine=True, duration=8, dry_run=False):
+    command = build_local_devnet_command(count=count, base_port=base_port, auto_mine=auto_mine, duration=duration)
+    if command is None:
+        return {"ok": False, "error": "Local devnet launcher script is missing."}
+
+    if dry_run or bool(app.config.get("TESTING")):
+        return {
+            "ok": True,
+            "started": False,
+            "dry_run": True,
+            "command": " ".join(command),
+            "count": int(count or 3),
+            "basePort": int(base_port or 9101),
+            "autoMine": bool(auto_mine),
+            "duration": int(duration or 8),
+            "running": bool(active_local_devnet_processes()),
+        }
+
+    startupinfo = None
+    creationflags = 0
+    if os.name == "nt":
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+        creationflags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+
+    process = subprocess.Popen(
+        command,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+        close_fds=True,
+    )
+    LOCAL_DEVNET_PROCESSES.append(process)
+    os.environ["BITMINI_LOCAL_DEVNET"] = "1"
+    return {
+        "ok": True,
+        "started": True,
+        "dry_run": False,
+        "pid": process.pid,
+        "command": " ".join(command),
+        "count": int(count or 3),
+        "basePort": int(base_port or 9101),
+        "autoMine": bool(auto_mine),
+        "duration": int(duration or 8),
+        "running": True,
+    }
+
+
 def node_rpc_request(method, path, payload=None, timeout=3):
     if not node_rpc_enabled():
         return 503, {"ok": False, "error": "Node RPC is not configured."}
@@ -878,6 +967,33 @@ def consensus_profile(mode):
     return CONSENSUS_PROFILES.get(normalized, CONSENSUS_PROFILES[DEFAULT_CONSENSUS_MODE]), normalized
 
 
+def default_risk_controls():
+    return {
+        "kycRequired": True,
+        "amlRequired": True,
+        "sanctionsRequired": True,
+        "manualReviewRequired": True,
+        "realMoneyDisabled": True,
+        "selfCustodyOptInOnly": True,
+        "custodialDefaultEnabled": True,
+        "restrictedRegions": ["sanctions", "high-risk"],
+    }
+
+
+def default_compliance_record():
+    return {
+        "kycStatus": "approved",
+        "amlStatus": "clear",
+        "sanctionsStatus": "clear",
+        "riskLevel": "low",
+        "submittedAt": None,
+        "reviewedAt": None,
+        "reviewer": None,
+        "notes": "Prototype compliance baseline for beta wallet onboarding.",
+        "lastUpdatedAt": utc_timestamp(),
+    }
+
+
 def default_wallet_state():
     return {
         "name": "Bitmini Wallet",
@@ -899,6 +1015,8 @@ def default_wallet_state():
         "withdrawalRequests": [],
         "status": "Verified",
         "network": "Bitmini Testnet",
+        "riskControls": default_risk_controls(),
+        "launchStatus": "blocked",
         "transactions": [
             {
                 "type": "Genesis",
@@ -941,6 +1059,7 @@ wallet_state = default_wallet_state()
 wallets = {}
 ledger = {"blocks": []}
 validator_state = default_validator_state()
+LOCAL_DEVNET_PROCESSES = []
 
 
 def db_encryption_key():
@@ -972,6 +1091,9 @@ def decrypt_persisted_value(raw_value):
 
 def init_storage():
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA synchronous = NORMAL")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS state_store (
@@ -985,6 +1107,9 @@ def init_storage():
 
 def save_state_to_db():
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA synchronous = NORMAL")
         conn.execute(
             "INSERT INTO state_store(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             ("wallet_state", encrypt_persisted_value(wallet_state)),
@@ -1029,7 +1154,21 @@ def load_state_from_db():
     return True
 
 
+def wallet_compliance_record(wallet):
+    if not wallet:
+        return default_compliance_record()
+    compliance = wallet.setdefault("compliance", {})
+    if not isinstance(compliance, dict):
+        compliance = {}
+    merged = default_compliance_record()
+    merged.update(compliance)
+    wallet["compliance"] = merged
+    wallet["compliance"]["lastUpdatedAt"] = utc_timestamp()
+    return wallet["compliance"]
+
+
 def wallet_download_payload(wallet):
+    compliance = wallet_compliance_record(wallet)
     return {
         "name": wallet.get("name", "Bitmini Wallet"),
         "username": wallet.get("username"),
@@ -1055,8 +1194,50 @@ def wallet_download_payload(wallet):
         "consensusMode": wallet.get("consensusMode", DEFAULT_CONSENSUS_MODE),
         "stakedBalance": float(wallet.get("stakedBalance", 0.0)),
         "slashedTotal": float(wallet.get("slashedTotal", 0.0)),
+        "compliance": compliance,
+        "riskControls": wallet_state.get("riskControls", default_risk_controls()),
         "createdAt": wallet.get("createdAt", utc_timestamp()),
     }
+
+
+def build_launch_readiness_snapshot():
+    controls = wallet_state.get("riskControls", default_risk_controls())
+    checklist = []
+
+    def add_item(key, label, passed):
+        checklist.append({"id": key, "label": label, "status": "pass" if passed else "fail"})
+        return passed
+
+    kyc_ok = all(
+        str((wallet.get("compliance") or {}).get("kycStatus", "approved")).lower() in {"approved", "clear"}
+        for wallet in wallets.values()
+    )
+    aml_ok = all(
+        str((wallet.get("compliance") or {}).get("amlStatus", "clear")).lower() in {"clear", "approved"}
+        for wallet in wallets.values()
+    )
+    sanctions_ok = all(
+        str((wallet.get("compliance") or {}).get("sanctionsStatus", "clear")).lower() in {"clear", "approved"}
+        for wallet in wallets.values()
+    )
+    manual_review_ok = bool(controls.get("manualReviewRequired", True))
+    real_money_gate = bool(controls.get("realMoneyDisabled", True))
+
+    pass_count = 0
+    pass_count += 1 if add_item("kyc", "KYC review complete", bool(controls.get("kycRequired", True) and kyc_ok)) else 0
+    pass_count += 1 if add_item("aml", "AML screening complete", bool(controls.get("amlRequired", True) and aml_ok)) else 0
+    pass_count += 1 if add_item("sanctions", "Sanctions screening complete", bool(controls.get("sanctionsRequired", True) and sanctions_ok)) else 0
+    pass_count += 1 if add_item("custody", "Hybrid custody boundaries defined", bool(controls.get("selfCustodyOptInOnly", True))) else 0
+    pass_count += 1 if add_item("launch", "Legal launch controls and deployment checklist in place", bool(manual_review_ok and real_money_gate)) else 0
+
+    if pass_count < len(checklist):
+        status = "blocked"
+    elif real_money_gate:
+        status = "legal-review-required"
+    else:
+        status = "ready"
+    wallet_state["launchStatus"] = status
+    return {"status": status, "checklist": checklist, "riskControls": controls}
 
 
 def wallet_public_payload(wallet):
@@ -1275,6 +1456,7 @@ def create_wallet_record(name="New User", email=None, password=None, date_of_bir
         "contacts": wallet_state["contacts"],
     }
     wallet["fiatValue"] = wallet["balance"] * wallet["price"]
+    wallet["compliance"] = default_compliance_record()
     wallets[wallet_address] = wallet
     sync_active_wallet(wallet)
     invalidate_epoch_cache()
@@ -1474,6 +1656,8 @@ def reset_runtime_state(persist=True):
         "mode": "Genesis block",
     }
 
+    wallet_state["riskControls"] = default_risk_controls()
+    wallet_state["launchStatus"] = "blocked"
     if persist:
         save_state_to_db()
 
@@ -1564,10 +1748,16 @@ def ensure_wallet_security_fields():
         wallet["userCategories"] = sorted(category_set)
         wallet.setdefault("lastActiveAt", wallet.get("createdAt", utc_timestamp()))
         wallet.setdefault("lockedBalance", 0.0)
+        compliance = wallet_compliance_record(wallet)
+        if not isinstance(compliance, dict):
+            wallet["compliance"] = default_compliance_record()
+            updated = True
         if wallet.get("mode") == "Genesis block":
             wallet["lockedBalance"] = max(float(wallet.get("lockedBalance", 0.0)), GENESIS_UNTOUCHABLE_SUPPLY)
             wallet["balance"] = max(float(wallet.get("balance", 0.0)), wallet["lockedBalance"])
             updated = True
+    wallet_state.setdefault("riskControls", default_risk_controls())
+    wallet_state.setdefault("launchStatus", "blocked")
     if updated:
         save_state_to_db()
 
@@ -1646,6 +1836,26 @@ def whitepaper_page():
     return render_template("whitepaper.html")
 
 
+@app.get("/terms")
+def terms_page():
+    return render_template("terms.html")
+
+
+@app.get("/privacy")
+def privacy_page():
+    return render_template("privacy.html")
+
+
+@app.get("/compliance")
+def compliance_page():
+    return render_template("compliance.html")
+
+
+@app.get("/launch-readiness")
+def launch_readiness_page():
+    return render_template("launch-readiness.html")
+
+
 @app.get("/api/security-layer")
 def security_layer_info():
     return jsonify(
@@ -1721,6 +1931,57 @@ def network_health():
             "message": "Node RPC is not configured for this public testnet bootstrap yet.",
         }
     return jsonify(payload), status
+
+
+@app.get("/api/network/devnet")
+def network_devnet_status():
+    processes = active_local_devnet_processes()
+    running = bool(processes)
+    local_devnet = {
+        "enabled": bool(os.environ.get("BITMINI_LOCAL_DEVNET") == "1") or running,
+        "running": running,
+        "validatorCount": int(os.environ.get("BITMINI_LOCAL_DEVNET_COUNT", "3") or "3"),
+        "basePort": int(os.environ.get("BITMINI_LOCAL_DEVNET_PORT", "9101") or "9101"),
+        "chainId": str(os.environ.get("BITMINI_CHAIN_ID", DEFAULT_CHAIN_ID)).strip() or DEFAULT_CHAIN_ID,
+        "launcher": "python network/local_devnet.py --count 3 --base-port 9101 --auto-mine",
+        "description": "Three-node local PoS devnet for validator rotation and block production testing.",
+        "nodes": [{"pid": process.pid, "status": "running"} for process in processes],
+        "activeProcesses": len(processes),
+    }
+    return jsonify({"ok": True, "devnet": local_devnet, "status": "prototype", "running": running})
+
+
+@app.post("/api/network/devnet/start")
+def network_devnet_start():
+    payload = request.get_json(silent=True) or {}
+    _, _, auth_error = authorize_admin_request(payload)
+    if auth_error:
+        return auth_error
+
+    count = int(payload.get("count", 3) or 3)
+    base_port = int(payload.get("basePort", 9101) or 9101)
+    auto_mine = bool(payload.get("autoMine", payload.get("auto_mine", True)))
+    duration = int(payload.get("duration", 8) or 8)
+    dry_run = bool(payload.get("dryRun", app.config.get("TESTING", False)))
+    os.environ["BITMINI_LOCAL_DEVNET_COUNT"] = str(count)
+    os.environ["BITMINI_LOCAL_DEVNET_PORT"] = str(base_port)
+
+    result = start_local_devnet(count=count, base_port=base_port, auto_mine=auto_mine, duration=duration, dry_run=dry_run)
+    if not result.get("ok"):
+        return jsonify(result), 500
+    return jsonify(result), 200
+
+
+@app.post("/api/network/devnet/stop")
+def network_devnet_stop():
+    payload = request.get_json(silent=True) or {}
+    _, _, auth_error = authorize_admin_request(payload)
+    if auth_error:
+        return auth_error
+
+    result = stop_local_devnet()
+    os.environ.pop("BITMINI_LOCAL_DEVNET", None)
+    return jsonify({"ok": True, "stopped": result["stopped"], "pids": result["pids"], "running": False})
 
 
 @app.get("/api/network/token-metrics")
@@ -1872,6 +2133,10 @@ def sqlite_health_snapshot():
         "rowCount": 0,
         "keys": [],
         "lastModified": None,
+        "journalMode": "unknown",
+        "foreignKeys": False,
+        "integrityCheck": "unknown",
+        "walEnabled": False,
     }
 
     if db_exists:
@@ -1879,11 +2144,25 @@ def sqlite_health_snapshot():
             os.path.getmtime(DB_PATH), timezone.utc
         ).strftime("%Y-%m-%dT%H:%M:%SZ")
         with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
             rows = conn.execute("SELECT key FROM state_store ORDER BY key").fetchall()
             snapshot["keys"] = [row[0] for row in rows]
             snapshot["rowCount"] = len(rows)
+            snapshot["journalMode"] = str(conn.execute("PRAGMA journal_mode").fetchone()[0] or "unknown")
+            snapshot["foreignKeys"] = bool(conn.execute("PRAGMA foreign_keys").fetchone()[0])
+            snapshot["integrityCheck"] = str(conn.execute("PRAGMA integrity_check").fetchone()[0] or "unknown")
+            snapshot["walEnabled"] = snapshot["journalMode"].lower() == "wal"
 
     return snapshot
+
+
+@app.get("/api/admin/db-health")
+def admin_db_health_api():
+    wallet, _, auth_error = authorize_admin_request({})
+    if auth_error:
+        return auth_error
+    snapshot = sqlite_health_snapshot()
+    return jsonify({"ok": True, "walletAddress": wallet.get("walletAddress"), **snapshot})
 
 
 def build_token_metrics():
@@ -2497,6 +2776,58 @@ def stake_tokens():
     )
 
 
+@app.post("/api/stake/unstake")
+def unstake_tokens():
+    payload = request.get_json(silent=True) or {}
+    wallet, wallet_address, auth_error = authorize_wallet_request(payload)
+    if auth_error:
+        return auth_error
+
+    amount = float(payload.get("amount", 0) or 0)
+    if amount <= 0:
+        return jsonify({"ok": False, "error": "Unstake amount must be greater than zero."}), 400
+
+    staked = float(wallet.get("stakedBalance", 0.0))
+    if amount > staked:
+        return jsonify({"ok": False, "error": "Cannot unstake more than the current staked balance."}), 400
+
+    wallet["stakedBalance"] = round(staked - amount, 4)
+    wallet["balance"] = round(float(wallet.get("balance", 0.0)) + amount, 4)
+    wallet["fiatValue"] = wallet["balance"] * wallet_state["price"]
+
+    tx = {
+        "type": "Unstaked",
+        "value": f"+{amount:.4f}",
+        "amount": f"+${(wallet_state['price'] * amount):,.2f}",
+        "note": "Stake released back to liquid balance",
+        "time": "Now",
+        "positive": True,
+        "recipient": wallet_address,
+        "memo": "Unstake release",
+    }
+    wallet.setdefault("transactions", [])
+    wallet["transactions"].insert(0, tx)
+    touch_wallet_activity(wallet)
+    sync_active_wallet(wallet)
+    invalidate_epoch_cache()
+    block = append_block([tx])
+    save_state_to_db()
+
+    return jsonify(
+        {
+            "ok": True,
+            "message": "Stake released successfully.",
+            "wallet": {
+                "walletAddress": wallet_address,
+                "balance": wallet["balance"],
+                "stakedBalance": wallet["stakedBalance"],
+                "fiatValue": wallet["fiatValue"],
+            },
+            "block_index": block["index"],
+        }
+    )
+
+
 @app.post("/api/slash")
 def slash_validator():
     payload = request.get_json(silent=True) or {}
@@ -2814,6 +3145,158 @@ def system_health():
     )
 
 
+@app.get("/api/compliance")
+def wallet_compliance_api():
+    target_address = str(request.args.get("address") or "").strip()
+    wallet = None
+    if target_address:
+        wallet, _ = get_wallet(target_address)
+    else:
+        wallet, _, auth_error = authorize_wallet_request({})
+        if auth_error:
+            return auth_error
+    if not wallet:
+        return jsonify({"ok": False, "error": "Wallet not found."}), 404
+    compliance = wallet_compliance_record(wallet)
+    snapshot = build_launch_readiness_snapshot()
+    return jsonify({
+        "ok": True,
+        "walletAddress": wallet.get("walletAddress"),
+        "compliance": compliance,
+        "launchStatus": snapshot["status"],
+        "riskControls": snapshot["riskControls"],
+    })
+
+
+@app.post("/api/kyc/submit")
+def wallet_kyc_submit():
+    payload = request.get_json(silent=True) or {}
+    wallet, wallet_address, auth_error = authorize_wallet_request(payload)
+    if auth_error:
+        return auth_error
+
+    compliance = wallet_compliance_record(wallet)
+    compliance.update({
+        "kycStatus": "pending",
+        "amlStatus": "pending",
+        "sanctionsStatus": "pending",
+        "riskLevel": str(payload.get("riskLevel") or "medium").strip() or "medium",
+        "documentType": str(payload.get("documentType") or "passport").strip() or "passport",
+        "country": str(payload.get("country") or "unknown").strip() or "unknown",
+        "submittedAt": utc_timestamp(),
+        "lastUpdatedAt": utc_timestamp(),
+        "notes": str(payload.get("notes") or "KYC submitted for compliance review.").strip() or "KYC submitted for compliance review.",
+    })
+    record_wallet_audit_event(wallet, "kyc", "KYC submission received", {"walletAddress": wallet_address, "country": compliance.get("country"), "riskLevel": compliance.get("riskLevel")}, "info")
+    touch_wallet_activity(wallet)
+    save_state_to_db()
+    return jsonify({"ok": True, "walletAddress": wallet_address, "compliance": compliance})
+
+
+@app.post("/api/kyc/review")
+def wallet_kyc_review():
+    payload = request.get_json(silent=True) or {}
+    _, admin_address, auth_error = authorize_admin_request({})
+    if auth_error:
+        return auth_error
+
+    target_address = str(payload.get("walletAddress") or "").strip()
+    wallet, _ = get_wallet(target_address)
+    if not wallet:
+        return jsonify({"ok": False, "error": "Wallet not found."}), 404
+
+    decision = str(payload.get("status") or "pending").strip().lower()
+    compliance = wallet_compliance_record(wallet)
+    if decision == "approved":
+        compliance.update({
+            "kycStatus": "approved",
+            "amlStatus": "clear",
+            "sanctionsStatus": "clear",
+            "riskLevel": str(payload.get("riskLevel") or "low").strip() or "low",
+            "reviewedAt": utc_timestamp(),
+            "reviewer": str(payload.get("reviewer") or admin_address).strip() or admin_address,
+            "notes": str(payload.get("notes") or "KYC approved after compliance review.").strip() or "KYC approved after compliance review.",
+            "lastUpdatedAt": utc_timestamp(),
+        })
+    elif decision == "rejected":
+        compliance.update({
+            "kycStatus": "rejected",
+            "amlStatus": "blocked",
+            "sanctionsStatus": "blocked",
+            "riskLevel": "high",
+            "reviewedAt": utc_timestamp(),
+            "reviewer": str(payload.get("reviewer") or admin_address).strip() or admin_address,
+            "notes": str(payload.get("notes") or "KYC rejected after compliance review.").strip() or "KYC rejected after compliance review.",
+            "lastUpdatedAt": utc_timestamp(),
+        })
+    else:
+        compliance.update({
+            "kycStatus": "pending",
+            "amlStatus": "pending",
+            "sanctionsStatus": "pending",
+            "riskLevel": str(payload.get("riskLevel") or "medium").strip() or "medium",
+            "reviewedAt": utc_timestamp(),
+            "reviewer": str(payload.get("reviewer") or admin_address).strip() or admin_address,
+            "notes": str(payload.get("notes") or "Manual compliance review is still pending.").strip() or "Manual compliance review is still pending.",
+            "lastUpdatedAt": utc_timestamp(),
+        })
+
+    record_wallet_audit_event(wallet, "kyc_review", "Compliance review completed", {"walletAddress": target_address, "status": decision}, "info")
+    touch_wallet_activity(wallet)
+    save_state_to_db()
+    return jsonify({"ok": True, "walletAddress": target_address, "compliance": compliance})
+
+
+@app.get("/api/launch/readiness")
+def legal_launch_readiness_api():
+    snapshot = build_launch_readiness_snapshot()
+    status_text = {
+        "blocked": "Launch is blocked until legal, AML, sanctions, and custody controls are in place.",
+        "legal-review-required": "Legal review is required before any real-money or transferable-token launch under the hybrid custody model.",
+        "ready": "Ready for staged deployment with legal, operational, and governance controls in place.",
+    }.get(snapshot["status"], "Launch controls require review.")
+    return jsonify({"ok": True, "status": snapshot["status"], "message": status_text, "checklist": snapshot["checklist"]})
+
+
+@app.get("/api/admin/governance")
+def admin_governance_api():
+    wallet, _, auth_error = authorize_admin_request({})
+    if auth_error:
+        return auth_error
+
+    snapshot = build_launch_readiness_snapshot()
+    return jsonify({
+        "ok": True,
+        "walletAddress": wallet.get("walletAddress"),
+        "riskControls": snapshot["riskControls"],
+        "launchStatus": snapshot["status"],
+        "checklist": snapshot["checklist"],
+        "summary": {
+            "totalWallets": len(wallets),
+            "kycPending": sum(1 for candidate in wallets.values() if str((candidate.get("compliance") or {}).get("kycStatus", "approved")).lower() == "pending"),
+            "blockedWallets": sum(1 for candidate in wallets.values() if str((candidate.get("compliance") or {}).get("sanctionsStatus", "clear")).lower() in {"blocked", "rejected"}),
+        },
+    })
+
+
+@app.post("/api/admin/risk/controls")
+def admin_risk_controls_api():
+    payload = request.get_json(silent=True) or {}
+    _, _, auth_error = authorize_admin_request(payload)
+    if auth_error:
+        return auth_error
+
+    controls = wallet_state.setdefault("riskControls", default_risk_controls())
+    for key in ["kycRequired", "amlRequired", "sanctionsRequired", "manualReviewRequired", "realMoneyDisabled", "selfCustodyOptInOnly", "custodialDefaultEnabled"]:
+        if key in payload:
+            controls[key] = bool(payload.get(key))
+    if payload.get("restrictedRegions") is not None:
+        controls["restrictedRegions"] = payload.get("restrictedRegions")
+    snapshot = build_launch_readiness_snapshot()
+    save_state_to_db()
+    return jsonify({"ok": True, "riskControls": snapshot["riskControls"], "launchStatus": snapshot["status"]})
+
+
 @app.get("/api/admin/audit")
 def admin_audit_log():
     wallet, _, auth_error = authorize_admin_request({})
@@ -3109,23 +3592,6 @@ def send_transaction():
     if auth_error:
         return auth_error
 
-    method = str(payload.get("securityMethod", payload.get("method", "password")) or "password").strip().lower()
-    secret = str(payload.get("secret", payload.get("password", payload.get("passcode", ""))) or "").strip()
-
-    if method in {"password", "passcode"}:
-        expected_hash = wallet.get("passcodeHash")
-        auth_salt = wallet.get("authSalt", "")
-        if not expected_hash or not secret or hash_passcode(secret, auth_salt) != expected_hash:
-            return jsonify({"ok": False, "error": "Wallet password is required to send money."}), 401
-    elif method == "seed_phrase":
-        stored_hash = wallet.get("seedPhraseHash")
-        if not stored_hash or not secret:
-            return jsonify({"ok": False, "error": "Wallet seed phrase is required to send money."}), 401
-        if hash_seed_phrase(secret) != stored_hash:
-            return jsonify({"ok": False, "error": "Invalid wallet seed phrase."}), 401
-    else:
-        return jsonify({"ok": False, "error": "Unsupported wallet security method for transfers."}), 400
-
     amount = float(payload.get("amount", 0) or 0)
     recipient = str(payload.get("recipient", "")).strip()
     memo = str(payload.get("memo", "") or "Transfer").strip() or "Transfer"
@@ -3146,8 +3612,32 @@ def send_transaction():
     if duplicate:
         return jsonify({"ok": False, "error": "Duplicate payment detected. This transfer was already sent."}), 400
 
+    method = str(payload.get("securityMethod", payload.get("method", "password")) or "password").strip().lower()
+    secret = str(payload.get("secret", payload.get("password", payload.get("passcode", ""))) or "").strip()
     session_token = request.headers.get("X-Bitmini-Session") or str(payload.get("sessionToken", "") or "").strip()
     active_session = get_active_session_for_token(wallet, session_token)
+
+    if method in {"password", "passcode"}:
+        expected_hash = wallet.get("passcodeHash")
+        auth_salt = wallet.get("authSalt", "")
+        if active_session and not secret:
+            pass
+        elif not expected_hash or not secret or hash_passcode(secret, auth_salt) != expected_hash:
+            return jsonify({"ok": False, "error": "Wallet password is required to send money."}), 401
+    elif method == "seed_phrase":
+        stored_hash = wallet.get("seedPhraseHash")
+        if active_session and not secret:
+            pass
+        elif not stored_hash or not secret:
+            return jsonify({"ok": False, "error": "Wallet seed phrase is required to send money."}), 401
+        elif hash_seed_phrase(secret) != stored_hash:
+            return jsonify({"ok": False, "error": "Invalid wallet seed phrase."}), 401
+    else:
+        return jsonify({"ok": False, "error": "Unsupported wallet security method for transfers."}), 400
+
+    available_balance = float(wallet.get("balance", 0.0)) - float(wallet.get("lockedBalance", 0.0))
+    if amount > available_balance:
+        return jsonify({"ok": False, "error": "Insufficient unlocked balance for transfer."}), 400
 
     if node_rpc_enabled():
         if not active_session or not active_session.get("networkPrivateKey"):

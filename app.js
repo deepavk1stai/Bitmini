@@ -301,7 +301,7 @@ function renderWallet() {
           </div>
           <div>
             <label>Mode</label>
-            <strong>Self-custody</strong>
+            <strong>Hybrid staged</strong>
           </div>
         </div>
       </article>

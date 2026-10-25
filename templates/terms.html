@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Terms</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('terms_page') }}"><span class="nav-icon">⚖</span>Terms</a>
+        <a href="{{ url_for('privacy_page') }}"><span class="nav-icon">🔒</span>Privacy</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact">
+        <p class="eyebrow">Terms and conditions</p>
+        <h1>Bitmini is a beta product with explicit legal and operational boundaries.</h1>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>1. Product status</h2>
+          <p>Bitmini is an internal-ledger beta prototype and research system. It is not a regulated money transmitter, exchange, broker, custodian, or legal wallet service for live public commerce. Any use of the product is for testing, product research, and controlled demonstration purposes.</p>
+
+          <h2>2. No financial advice</h2>
+          <p>All content, product messaging, and wallet flows are informational only. Nothing in this prototype constitutes investment advice, legal advice, tax advice, banking services, or a solicitation to purchase or sell any financial instrument.</p>
+
+          <h2>3. User responsibilities</h2>
+          <p>Users must only register and transact within the intended demonstration environment. You are responsible for safeguarding wallet credentials, securing backups, and complying with local laws governing identity, access, and digital systems usage.</p>
+        </article>
+
+        <article class="card">
+          <h2>4. Operational boundaries</h2>
+          <p>Bitmini may include wallet onboarding, session-based access, transfer validation, referral logic, and network bootstrap tooling. It does not guarantee production-grade legal compliance, real-money settlement, or customer support for regulated financial operations.</p>
+
+          <h2>5. Risk acknowledgment</h2>
+          <p>Use of this prototype may involve software bugs, experimental logic, data resets, and evolving product constraints. The project team does not guarantee uninterrupted operation, asset protection, or loss-free participation.</p>
+
+          <h2>6. Changes and enforcement</h2>
+          <p>Bitmini may change product rules, risk controls, wallet access patterns, and launch boundaries as the system evolves. Continued use indicates acceptance of those conditions.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('privacy_page') }}">Privacy</a>
+        <a href="{{ url_for('compliance_page') }}">Compliance</a>
+        <a href="{{ url_for('wallet_app') }}">Wallet</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>

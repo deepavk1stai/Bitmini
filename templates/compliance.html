@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Compliance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('terms_page') }}"><span class="nav-icon">⚖</span>Terms</a>
+        <a href="{{ url_for('privacy_page') }}"><span class="nav-icon">🔒</span>Privacy</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact">
+        <p class="eyebrow">Compliance layers</p>
+        <h1>Risk controls, KYC, AML, sanctions, and governance are built as launch gates.</h1>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>KYC / AML / sanctions</h2>
+          <p>Wallet onboarding includes a policy baseline for KYC review, AML screening, and sanctions checks before a wallet can move into broad live usage. The system is designed to block unsupported jurisdictions, high-risk wallet profiles, and restricted account activity without allowing unrestricted transfer behavior.</p>
+
+          <h2>Governance and controls</h2>
+          <p>Admin roles are separated from normal wallet actions. Review controls, escalation paths, and wallet risk states are enforced to keep operational decisions accountable and auditable. Sensitive actions require both valid session identity and explicit policy checks.</p>
+        </article>
+
+        <article class="card">
+          <h2>Launch-readiness model</h2>
+          <p>Bitmini uses a staged, hybrid model: a custodial default for operational support and recovery, self-custody opt-in only where policy and legal review allow it, and a strong default posture of “do not launch live money services without governance sign-off.”</p>
+
+          <h2>Operational checklist</h2>
+          <p>Before any public wallet launch, legal entity setup, sanctions screening vendor selection, KYB review, payment-rail approval, and incident-response plans must be complete. This prototype intentionally keeps those controls visible as launch gates rather than pretending they are already live.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('terms_page') }}">Terms</a>
+        <a href="{{ url_for('privacy_page') }}">Privacy</a>
+        <a href="{{ url_for('wallet_app') }}">Wallet</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>

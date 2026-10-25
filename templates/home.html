@@ -21,6 +21,9 @@
         <a href="#problems"><span class="nav-icon">◎</span>Problems</a>
         <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">↗</span>Tour</a>
         <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('terms_page') }}"><span class="nav-icon">⚖</span>Terms</a>
+        <a href="{{ url_for('privacy_page') }}"><span class="nav-icon">🔒</span>Privacy</a>
+        <a href="{{ url_for('compliance_page') }}"><span class="nav-icon">✓</span>Compliance</a>
         <a href="{{ url_for('donation_page') }}"><span class="nav-icon">✦</span>Donate</a>
         <a class="cta" href="#existing-user"><span class="nav-icon">◈</span>Open Wallet</a>
       </nav>
@@ -34,10 +37,10 @@
       {% endif %}
 
       <section class="hero">
-        <p class="eyebrow">Mobile-first digital currency network</p>
-        <h1>Bitmini gives everyday people a fairer, simpler way to own and move digital value.</h1>
+        <p class="eyebrow">Beta wallet and internal-ledger prototype</p>
+        <h1>Bitmini gives everyday people a fairer, simpler way to explore a wallet-first digital value system.</h1>
         <p class="lead">
-          The modern world is full of high fees, fragmented wallets, weak access control, and confusing finance products. Bitmini solves that with a wallet-first, self-custody system designed for real users, early supporters, and transparent network growth.
+          This project is an internal-ledger beta and research prototype, not a live regulated wallet product or a real-money exchange. It demonstrates wallet onboarding, supply controls, referral logic, and network tooling in a controlled testing environment.
         </p>
         <div class="hero-actions">
           <a class="button primary" href="#new-user">Create New Wallet</a>
@@ -86,7 +89,7 @@
         <article class="card">
           <h2>What problem Bitmini solves</h2>
           <p>
-            Millions of people still deal with expensive moving parts, unclear ownership, poor onboarding, and central points of failure. Bitmini was designed to solve that by combining wallet simplicity with transparent network rules, self-custody, and accessible participation.
+            Millions of people still deal with expensive moving parts, unclear ownership, poor onboarding, and central points of failure. Bitmini was designed to solve that by combining wallet simplicity with transparent network rules, a hybrid custody model, and accessible participation.
           </p>
           <ul>
             <li>Expensive transfers and confusing money rails</li>
@@ -106,8 +109,8 @@
       <section class="grid three solution-grid" id="problems">
         <article class="card">
           <span class="step-badge">A</span>
-          <h2>Self-custody</h2>
-          <p>People keep control over their wallets instead of handing access to centralized middlemen or brittle setups.</p>
+          <h2>Hybrid custody model</h2>
+          <p>People can explore a wallet experience in a controlled environment with a custodial default for support and recovery, plus a self-custody path for advanced users.</p>
         </article>
         <article class="card">
           <span class="step-badge">B</span>
@@ -220,6 +223,9 @@
       <nav class="site-footer-nav" aria-label="Footer navigation">
         <a href="{{ url_for('home') }}">Home</a>
         <a href="{{ url_for('whitepaper_page') }}">Whitepaper</a>
+        <a href="{{ url_for('terms_page') }}">Terms</a>
+        <a href="{{ url_for('privacy_page') }}">Privacy</a>
+        <a href="{{ url_for('compliance_page') }}">Compliance</a>
         <a href="{{ url_for('wallet_app') }}">Wallet</a>
       </nav>
       <span class="footer-copy">© 2026 Bitmini</span>

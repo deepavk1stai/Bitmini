@@ -2,7 +2,7 @@
 
 ## Product direction
 
-The product brief centers on a mobile-first wallet and payment experience that feels trustworthy to everyday users while still supporting advanced digital currency behavior.
+The product brief centers on a mobile-first wallet and payment experience that feels trustworthy to everyday users while still supporting advanced digital currency behavior. The recommended operating model is a staged hybrid custody plan: custodial default for user recovery and support, self-custody opt-in for advanced users, and explicit product boundaries until legal/compliance review is complete.
 
 ## MVP scope
 
@@ -26,7 +26,7 @@ The product brief centers on a mobile-first wallet and payment experience that f
 - Address, balance, and transaction lookups
 - Block explorer support
 - Admin dashboard and risk checks
-- Self-custody wallets without backend storage of private keys
+- Hybrid custody model with custodial default and optional self-custody support
 
 ### Compliance and safety
 
@@ -38,12 +38,12 @@ The product brief centers on a mobile-first wallet and payment experience that f
 
 ## Recommended MVP implementation priority
 
-1. Custodial wallet mode for general users
-2. Self-custody wallet support as a later advanced setting or V1.1 feature
-3. Partner-driven buy / sell flow with KYC and compliance checks
-4. Strong price and activity visibility
-5. Mobile-first web experience with QR and transfer flows
-6. Admin console and blockchain monitoring tools
+1. Hybrid wallet mode with custodial default and self-custody support behind product controls
+2. Partner-driven buy / sell flow with KYC and compliance checks
+3. Strong price and activity visibility
+4. Mobile-first web experience with QR and transfer flows
+5. Admin console and blockchain monitoring tools
+6. Legal/compliance review before any real-money or transferable-token launch
 
 ## Architecture recommendation
 

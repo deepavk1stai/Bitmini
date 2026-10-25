@@ -2,11 +2,11 @@
 
 ## 1. Product overview
 Bitmini is a wallet-first digital value and rewards platform built around:
-- self-custody wallet access
+- hybrid custody architecture with custodial default and self-custody opt-in
 - referral-based incentives
 - validator and stakeholder participation
 - ad-driven monetization and engagement
-- future fiat conversion marketplace
+- future fiat conversion marketplace under legal/compliance review
 
 The current version is a beta-ready foundation for a mobile-friendly consumer app and network economy.
 
@@ -55,9 +55,10 @@ The current version is a beta-ready foundation for a mobile-friendly consumer ap
 ## 5. Architecture
 ### Backend
 - Python + Flask application in app.py
-- SQLite for persistent state storage
+- SQLite for persistent state storage in the beta prototype
 - Session-based authorization for wallet actions
 - Encrypted wallet state and transaction history storage
+- Hybrid custody design that separates custodial support flows from self-custody opt-in paths
 
 ### Frontend
 - Flask templates for public pages and wallet shell

@@ -395,7 +395,7 @@ function renderWallet() {
         <div class="wallet-summary-grid">
           <div><label>Balance</label><strong>${formatBmini(state.balance)}</strong></div>
           <div><label>Fiat value</label><strong>${formatUsd(state.fiatValue)}</strong></div>
-          <div><label>Mode</label><strong>${state.mode || 'Self-custody'}</strong></div>
+          <div><label>Mode</label><strong>${state.mode || 'Hybrid staged'}</strong></div>
         </div>
       </article>
       <article class="panel">

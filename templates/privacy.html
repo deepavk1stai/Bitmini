@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitmini | Privacy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand-wrap" href="{{ url_for('home') }}" aria-label="Bitmini home">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <div class="brand">Bitmini</div>
+      </a>
+      <nav class="nav-pills" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="{{ url_for('guided_tour_page') }}"><span class="nav-icon">◎</span>Tour</a>
+        <a href="{{ url_for('whitepaper_page') }}"><span class="nav-icon">▣</span>Whitepaper</a>
+        <a href="{{ url_for('terms_page') }}"><span class="nav-icon">⚖</span>Terms</a>
+        <a href="{{ url_for('privacy_page') }}"><span class="nav-icon">🔒</span>Privacy</a>
+        <a class="cta" href="{{ url_for('wallet_app') }}"><span class="nav-icon">◈</span>Open Wallet</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero compact">
+        <p class="eyebrow">Privacy notice</p>
+        <h1>Bitmini processes only the minimum data necessary for wallet operation and compliance review.</h1>
+      </section>
+
+      <section class="grid two">
+        <article class="card">
+          <h2>Data we use</h2>
+          <p>Customer onboarding may require wallet identity fields such as name, date of birth, zip code, email, username, and password or seed phrase metadata. These fields are used for account creation, wallet ownership checks, account recovery flows, and risk evaluation in controlled test conditions.</p>
+
+          <h2>Why we handle it</h2>
+          <p>We process wallet data to authenticate access, prevent account abuse, review onboarding risk, and maintain a traceable audit trail for operational integrity. The project is designed for a beta environment and not for broad public financial custody.</p>
+        </article>
+
+        <article class="card">
+          <h2>Security posture</h2>
+          <p>Passwords are hashed, sessions are bound to wallet ownership, and sensitive actions require active authorization. We limit personal data collection, maintain local storage controls, and separate wallet access from network operations where practical.</p>
+
+          <h2>Retention and control</h2>
+          <p>Data retention depends on product operations, compliance review, and security monitoring. If a system is converted to a live regulated launch, retention and access controls must be expanded to legal requirements, data minimization rules, and transparent deletion or review procedures.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='bitmini-mark.svg') }}" alt="Bitmini logo" />
+        <span>Bitmini</span>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('terms_page') }}">Terms</a>
+        <a href="{{ url_for('compliance_page') }}">Compliance</a>
+        <a href="{{ url_for('wallet_app') }}">Wallet</a>
+      </nav>
+      <span class="footer-copy">© 2026 Bitmini</span>
+    </footer>
+  </body>
+</html>
