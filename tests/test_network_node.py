@@ -1,8 +1,13 @@
 import json
 import tempfile
+import threading
+import time
+import urllib.error
 from pathlib import Path
 
-from network.bitmini_node import BitminiNode, utc_timestamp
+from werkzeug.serving import make_server
+
+from network.bitmini_node import BitminiNode, create_app, utc_timestamp
 
 
 def make_genesis(path: Path):
@@ -178,3 +183,163 @@ def test_validator_governance_and_rotation():
         mined2, _, block2 = node.mine_block("BALICE")
         assert mined2 is True
         assert block2["proposer"] == "BALICE"
+
+
+def start_node_server(node):
+    server = make_server("127.0.0.1", node.port, create_app(node))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, thread
+
+
+def test_peer_nodes_sync_longest_valid_chain():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        genesis = Path(temp_dir) / "genesis.json"
+        make_genesis(genesis)
+
+        node_a = BitminiNode(
+            node_id="n5a",
+            host="127.0.0.1",
+            port=9205,
+            data_dir=str(Path(temp_dir) / "data-a"),
+            genesis_path=str(genesis),
+            peer_urls=[],
+        )
+        node_b = BitminiNode(
+            node_id="n5b",
+            host="127.0.0.1",
+            port=9206,
+            data_dir=str(Path(temp_dir) / "data-b"),
+            genesis_path=str(genesis),
+            peer_urls=[node_a.base_url],
+        )
+        node_a.peer_urls.add(node_b.base_url)
+
+        server_a, thread_a = start_node_server(node_a)
+        try:
+            tx = build_tx(node_a, "BALICE", "BBOB", 10.0, 1, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+            node_a.submit_transaction(tx)
+            mined, _, block = node_a.mine_block("BRESERVE")
+            assert mined is True
+
+            server_b, thread_b = start_node_server(node_b)
+            try:
+                assert len(node_b.chain) == 1
+                synced = node_b.sync_with_peers()
+                assert synced is True
+                assert len(node_b.chain) == 2
+                assert node_b.chain[-1]["hash"] == block["hash"]
+                assert node_b.state["accounts"]["BBOB"]["balance"] == 15.0
+            finally:
+                server_b.shutdown()
+                thread_b.join(timeout=5)
+        finally:
+            server_a.shutdown()
+            thread_a.join(timeout=5)
+
+
+def test_pending_sequential_nonces_from_same_sender_are_accepted():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        genesis = Path(temp_dir) / "genesis.json"
+        make_genesis(genesis)
+        node = BitminiNode(
+            node_id="n6",
+            host="127.0.0.1",
+            port=9207,
+            data_dir=str(Path(temp_dir) / "data"),
+            genesis_path=str(genesis),
+            peer_urls=[],
+        )
+
+        tx_1 = build_tx(node, "BALICE", "BBOB", 1.0, 1, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+        tx_2 = build_tx(node, "BALICE", "BBOB", 2.0, 2, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+        tx_3 = build_tx(node, "BALICE", "BBOB", 3.0, 3, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+
+        for tx in (tx_1, tx_2, tx_3):
+            ok, reason = node.submit_transaction(tx)
+            assert ok is True, reason
+        assert len(node.mempool) == 3
+
+
+def test_duplicate_nonce_rejected_before_mining():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        genesis = Path(temp_dir) / "genesis.json"
+        make_genesis(genesis)
+        node = BitminiNode(
+            node_id="n7",
+            host="127.0.0.1",
+            port=9208,
+            data_dir=str(Path(temp_dir) / "data"),
+            genesis_path=str(genesis),
+            peer_urls=[],
+        )
+
+        tx_1 = build_tx(node, "BALICE", "BBOB", 5.0, 1, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+        tx_2 = build_tx(node, "BALICE", "BBOB", 7.0, 1, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+        ok_1, message_1 = node.submit_transaction(tx_1)
+        assert ok_1 is True
+        ok_2, reason_2 = node.submit_transaction(tx_2)
+        assert ok_2 is False
+        assert "duplicate nonce" in reason_2.lower()
+
+
+def test_submit_transaction_is_not_blocked_by_peer_broadcast_latency(monkeypatch):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        genesis = Path(temp_dir) / "genesis.json"
+        make_genesis(genesis)
+        node = BitminiNode(
+            node_id="n8",
+            host="127.0.0.1",
+            port=9209,
+            data_dir=str(Path(temp_dir) / "data"),
+            genesis_path=str(genesis),
+            peer_urls=["http://127.0.0.1:9999"],
+        )
+
+        def slow_urlopen(req, timeout=1):
+            import time
+            time.sleep(0.5)
+            raise urllib.error.URLError("peer unavailable")
+
+        monkeypatch.setattr("urllib.request.urlopen", slow_urlopen)
+
+        tx = build_tx(node, "BALICE", "BBOB", 2.0, 1, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+        started = time.perf_counter()
+        ok, reason = node.submit_transaction(tx)
+        elapsed = time.perf_counter() - started
+        assert ok is True, reason
+        assert elapsed < 0.25, f"submit_transaction blocked on peer broadcast: {elapsed:.3f}s"
+
+
+def test_mempool_persistence_can_handle_repeated_writes():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        genesis = Path(temp_dir) / "genesis.json"
+        make_genesis(genesis)
+        node = BitminiNode(
+            node_id="n9",
+            host="127.0.0.1",
+            port=9210,
+            data_dir=str(Path(temp_dir) / "data"),
+            genesis_path=str(genesis),
+            peer_urls=[],
+        )
+
+        for index in range(50):
+            payload = {
+                "chain_id": node.chain_id,
+                "sender": "BALICE",
+                "recipient": "BBOB",
+                "amount": 0.01 * (index + 1),
+                "nonce": index + 1,
+                "timestamp": utc_timestamp(),
+                "memo": f"persist-{index}",
+                "type": "transfer",
+            }
+            payload["signature"] = node.sign_transaction(payload, "2f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")
+            ok, reason = node.submit_transaction(payload)
+            assert ok is True, reason
+
+        for _ in range(20):
+            node._persist()
+
+        assert len(node.mempool) >= 1

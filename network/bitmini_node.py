@@ -4,8 +4,10 @@ import hashlib
 import json
 import os
 import threading
+import time
 import urllib.error
 import urllib.request
+import uuid
 from datetime import datetime, timezone
 
 from cryptography.hazmat.primitives import serialization
@@ -68,10 +70,27 @@ class ChainStore:
             return json.load(handle)
 
     def _save_json(self, path, payload):
-        temp = f"{path}.tmp"
-        with open(temp, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2)
-        os.replace(temp, path)
+        directory = os.path.dirname(path) or "."
+        os.makedirs(directory, exist_ok=True)
+        temp = os.path.join(directory, f".{os.path.basename(path)}.{uuid.uuid4().hex}.tmp")
+
+        try:
+            with open(temp, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle, indent=2)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp, path)
+            return
+        except (OSError, PermissionError):
+            try:
+                if os.path.exists(temp):
+                    os.remove(temp)
+            except OSError:
+                pass
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle, indent=2)
+                handle.flush()
+                os.fsync(handle.fileno())
 
     def load_chain(self):
         return self._load_json(self.chain_path, [])
@@ -106,6 +125,8 @@ class BitminiNode:
         self.base_url = f"http://{host}:{port}"
         self.store = ChainStore(data_dir)
         self.lock = threading.Lock()
+        self._persist_lock = threading.Lock()
+        self._persist_scheduled = False
 
         with open(genesis_path, "r", encoding="utf-8") as handle:
             self.genesis = json.load(handle)
@@ -122,12 +143,30 @@ class BitminiNode:
 
         if not self.chain or not self.state:
             self._initialize_from_genesis()
+        self.sync_with_peers()
 
     def _persist(self):
         self.store.save_chain(self.chain)
         self.store.save_state(self.state)
         self.store.save_mempool(self.mempool)
         self.store.save_peers(list(self.peer_urls))
+
+    def _schedule_persist(self):
+        with self._persist_lock:
+            if self._persist_scheduled:
+                return
+            self._persist_scheduled = True
+
+        worker = threading.Thread(target=self._flush_pending_persist, daemon=True)
+        worker.start()
+
+    def _flush_pending_persist(self):
+        time.sleep(0.05)
+        with self._persist_lock:
+            if not self._persist_scheduled:
+                return
+            self._persist_scheduled = False
+        self._persist()
 
     def _hash_block(self, block):
         payload = dict(block)
@@ -212,6 +251,19 @@ class BitminiNode:
     def sign_transaction(self, tx, private_key_hex):
         return sign_message(private_key_hex, self.tx_signing_payload(tx))
 
+    def sender_pending_nonces(self, sender, current_mempool=None):
+        mempool = self.mempool if current_mempool is None else current_mempool
+        nonces = []
+        for item in mempool:
+            if str(item.get("sender", "")) == sender:
+                nonce = int(item.get("nonce", -1))
+                if nonce >= 0:
+                    nonces.append(nonce)
+        return sorted(set(nonces))
+
+    def has_pending_nonce(self, sender, nonce, current_mempool=None):
+        return int(nonce) in self.sender_pending_nonces(sender, current_mempool=current_mempool)
+
     def validate_transaction(self, tx, accounts=None):
         working = accounts if accounts is not None else self.state["accounts"]
         required = ["chain_id", "sender", "recipient", "amount", "nonce", "timestamp", "signature"]
@@ -239,8 +291,19 @@ class BitminiNode:
         if amount <= 0:
             return False, "Amount must be positive"
 
-        expected_nonce = int(sender_account.get("nonce", 0)) + 1
-        if int(tx["nonce"]) != expected_nonce:
+        nonce = int(tx["nonce"])
+        pending_nonces = self.sender_pending_nonces(
+            sender,
+            current_mempool=self.mempool if accounts is None else [],
+        )
+        if nonce in pending_nonces:
+            return False, "Duplicate nonce for sender"
+
+        if pending_nonces:
+            expected_nonce = pending_nonces[-1] + 1
+        else:
+            expected_nonce = int(sender_account.get("nonce", 0)) + 1
+        if nonce != expected_nonce:
             return False, "Invalid nonce"
 
         available = float(sender_account.get("balance", 0.0)) - float(sender_account.get("locked_balance", 0.0))
@@ -280,11 +343,96 @@ class BitminiNode:
                 return True, "Transaction already pending"
 
             self.mempool.append(tx)
-            self._persist()
+            self._schedule_persist()
 
         if not from_peer:
             self.broadcast("/p2p/tx", tx)
         return True, "Transaction accepted"
+
+    def _state_from_chain(self, chain):
+        accounts = copy.deepcopy(self.state.get("accounts", {}))
+        for block in chain[1:]:
+            for tx in block.get("transactions", []):
+                sender = str(tx["sender"])
+                recipient = str(tx["recipient"])
+                amount = float(tx["amount"])
+                sender_account = accounts.get(sender)
+                if sender_account is None:
+                    continue
+                sender_account["balance"] = round(float(sender_account.get("balance", 0.0)) - amount, 8)
+                sender_account["nonce"] = int(sender_account.get("nonce", 0)) + 1
+                recipient_account = accounts.setdefault(
+                    recipient,
+                    {"balance": 0.0, "locked_balance": 0.0, "nonce": 0, "public_key": ""},
+                )
+                recipient_account["balance"] = round(float(recipient_account.get("balance", 0.0)) + amount, 8)
+        return accounts
+
+    def _is_valid_chain(self, chain):
+        if not isinstance(chain, list) or not chain:
+            return False
+        if int(chain[0].get("index", -1)) != 0:
+            return False
+        if self._hash_block(chain[0]) != chain[0].get("hash"):
+            return False
+        if chain[0].get("chain_id") != self.chain_id:
+            return False
+
+        accounts = copy.deepcopy(self.state.get("accounts", {}))
+        for index in range(1, len(chain)):
+            block = chain[index]
+            if int(block.get("index", -1)) != index:
+                return False
+            if block.get("previous_hash") != chain[index - 1].get("hash"):
+                return False
+            if self._hash_block(block) != block.get("hash"):
+                return False
+            if block.get("chain_id") != self.chain_id:
+                return False
+            for tx in block.get("transactions", []):
+                ok, reason = self.validate_transaction(tx, accounts=accounts)
+                if not ok:
+                    return False
+                self.apply_transaction(tx, accounts)
+            state_root = sha256_hex(canonical_json(accounts))
+            if state_root != block.get("state_root"):
+                return False
+        return True
+
+    def sync_with_peers(self, peer_urls=None):
+        peers = list(peer_urls or self.peer_urls)
+        best_chain = None
+
+        for peer in peers:
+            url = str(peer).strip().rstrip("/")
+            if not url:
+                continue
+            try:
+                with urllib.request.urlopen(f"{url}/rpc/chain", timeout=2) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+            except (urllib.error.URLError, TimeoutError, ValueError):
+                continue
+
+            chain = payload.get("blocks") if isinstance(payload, dict) else None
+            if not isinstance(chain, list):
+                continue
+            if len(chain) <= len(self.chain):
+                continue
+            if not self._is_valid_chain(chain):
+                continue
+            if best_chain is None or len(chain) > len(best_chain):
+                best_chain = chain
+
+        if best_chain is None:
+            return False
+
+        self.chain = best_chain
+        self.state["accounts"] = self._state_from_chain(best_chain)
+        validators = self.state.get("validators", [])
+        if validators:
+            self.state["proposer_index"] = (len(best_chain) - 1) % len(validators)
+        self._persist()
+        return True
 
     def next_proposer(self):
         validators = self.state.get("validators", [])
@@ -380,6 +528,7 @@ class BitminiNode:
 
         if not from_peer:
             self.broadcast("/p2p/block", block)
+        self.sync_with_peers()
         return True, "Block accepted"
 
     def governance_payload(self, request_payload):
@@ -487,7 +636,8 @@ class BitminiNode:
 
     def broadcast(self, path, payload):
         body = json.dumps(payload).encode("utf-8")
-        for peer in list(self.peer_urls):
+
+        def _deliver(peer):
             req = urllib.request.Request(
                 f"{peer}{path}",
                 data=body,
@@ -495,10 +645,14 @@ class BitminiNode:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=2):
+                with urllib.request.urlopen(req, timeout=1):
                     pass
-            except (urllib.error.URLError, TimeoutError):
-                continue
+            except (urllib.error.URLError, TimeoutError, OSError):
+                return
+
+        for peer in list(self.peer_urls):
+            thread = threading.Thread(target=_deliver, args=(peer,), daemon=True)
+            thread.start()
 
 
 def create_app(node):
@@ -625,7 +779,7 @@ def main():
         peer_urls=args.peer,
     )
     app = create_app(node)
-    app.run(host=args.host, port=args.port, debug=False)
+    app.run(host=args.host, port=args.port, debug=False, threaded=True)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,2 @@
+chain_id,validator_count,transactions_total,blocks_mined,elapsed_seconds,tx_per_second,tx_per_minute,benchmark_timestamp
+bitmini-devnet-1,5,5000,50,542.021,9.225,553.484,2026-10-28T03:39:22Z
