@@ -11,7 +11,7 @@ def test_devnet_status_and_launch_routes_are_available():
     assert status.status_code == 200
     payload = status.get_json()
     assert payload["ok"] is True
-    assert payload["devnet"]["validatorCount"] >= 3
+    assert payload["devnet"]["validatorCount"] >= 4
     assert payload["status"] == "prototype"
 
     admin_wallet = app.test_client().post(
@@ -32,13 +32,13 @@ def test_devnet_status_and_launch_routes_are_available():
 
     launch = app.test_client().post(
         "/api/network/devnet/start",
-        json={"count": 3, "basePort": 9101, "autoMine": True, "duration": 8, "dryRun": True},
+        json={"count": 4, "basePort": 9101, "autoMine": True, "duration": 8, "dryRun": True},
         headers={"X-Bitmini-Session": admin_session},
     )
     assert launch.status_code == 200
     route_payload = launch.get_json()
     assert route_payload["ok"] is True
-    assert route_payload["count"] == 3
+    assert route_payload["count"] == 4
     assert "command" in route_payload
 
     stop = app.test_client().post(

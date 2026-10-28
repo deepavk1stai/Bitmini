@@ -1,66 +1,75 @@
 # Production Stack Recommendation for Bitmini
 
+## Decision
+
+This repo is a strong prototype and a credible product foundation, but the stack recommendation is now explicit: do not treat the custom Python chain as the canonical production runtime unless the team is intentionally accepting a large protocol, security, and operations burden.
+
+The recommended decision path is:
+
+- Keep the product concepts, wallet app, and economic simulation work.
+- Use a framework-backed chain runtime for validator staking and chain operations.
+- Use the Python prototype only as a product and economics lab, not as the production consensus runtime.
+
 ## Recommendation
-For a production blockchain, do not continue as a custom single-application Python chain unless you are prepared to invest heavily in protocol engineering, security, and operations.
 
-The better path is to use a battle-tested blockchain framework and keep the current Bitmini app code as the application layer and ecosystem front end.
+Choose the runtime based on what the product needs most:
 
-## Best-fit options
+- Cosmos SDK + CometBFT if validator-staked PoS and chain-level governance are central
+- Substrate / Polkadot SDK if custom runtime logic and maximum chain flexibility are the priority
+- EVM-compatible stack if wallet compatibility and developer tooling matter more than owning a custom validator set
 
-### Option A: Cosmos SDK + CometBFT
-Best if you want:
-- modular validators
-- staking and governance
-- strong ecosystem tooling
-- a familiar PoS architecture
-- easier interoperability and upgrade path
+This is the central decision. Until it is made, roadmap work that hardens the custom Python chain is likely throwaway work.
 
-Good fit if Bitmini is a custom blockchain with staking and validator economics.
+## Why the custom Python chain is not the production default
 
-### Option B: Substrate / Polkadot SDK
-Best if you want:
-- highly customizable runtime
-- strong validator model
-- on-chain governance
-- high-performance chain development
-- a mature developer platform for custom chains
+A custom blockchain runtime requires:
 
-Good fit if you want a custom chain with strong runtime flexibility.
-
-### Option C: Ethereum-compatible L2 or EVM chain
-Best if you want:
-- smart contracts and wallet ecosystem
-- broad tooling and wallet support
-- easier developer onboarding
-- composability with DeFi and app tooling
-
-Good fit if the product needs a wider app ecosystem than a custom chain offers.
-
-## Why not continue with a custom Python chain as production?
-A custom chain requires:
 - consensus engineering
-- networking and peer validation
-- strong cryptographic and key-handling discipline
-- formal testing and attack simulations
-- infrastructure and operations
-- security review and disaster recovery
-- legal and compliance architecture
+- peer discovery, gossip, and sync logic
+- transaction validation and fee logic
+- key management and cryptographic discipline
+- remote signing and validator security controls
+- validator slashing, unbonding, and governance logic
+- operational hardening, backup, and recovery
+- legal and compliance framing
 
-This is substantially more than a prototype and is not a realistic short-term production target without a major platform investment.
+This is substantially beyond a prototype. It creates a large audit surface, and it is not the fastest route to a credible staging testnet.
 
-## Recommended plan
-1. Keep the Bitmini wallet app, UX, staking concept, and network economics model.
-2. Replace the custom chain runtime with a proven validator framework.
-3. Keep the app logic and node interface layer but integrate to the chosen runtime.
-4. Build a testnet before any mainnet claim.
-5. Treat this repo as the product prototype and economic design pipeline, not as final chain infrastructure.
+## Decision matrix
 
-## Suggested architecture
-- Application layer: Bitmini wallet UI, admin API, staking dashboard, onboarding flows
+| Criterion | Keep Python chain | Cosmos SDK + CometBFT | Substrate / Polkadot SDK | EVM chain / L2 |
+| --- | --- | --- | --- | --- |
+| Time to credible testnet | Slow | Fast | Medium | Fast |
+| Staking, slashing, governance built in | No | Yes | Yes | Depends |
+| Team fit | Python | Go | Rust | Solidity + tooling |
+| Wallet and explorer ecosystem | Limited | Good | Good | Best |
+| Customization | Total | High | Highest | Contract-level |
+| Audit surface you own | Entire protocol | Your modules only | Your pallets/runtime | Your contracts |
+| Fit with validator economics | Weak | Strong | Strong | Weak unless you own the chain |
+
+## Recommended execution model
+
+1. Keep the Bitmini wallet app, app UX, staking concepts, and value-flow model.
+2. Choose one framework by day 3 and freeze the decision in writing.
+3. Run a local runtime spike on the chosen framework with at least 4 validators.
+4. Keep the Python prototype for simulation, economic modeling, and migrations.
+5. Treat the repo as an app and product layer around the final chain runtime, not as the final runtime itself.
+
+## Proposed architecture
+
+- Application layer: Bitmini wallet UI, admin API, onboarding, staking dashboard
 - Chain runtime: Cosmos SDK or Substrate runtime
-- Validation layer: native validator network from framework
-- Security layer: secrets management, node hardening, key rotation
-- Operations layer: monitoring, alerts, CI/CD, disaster recovery
+- Validation layer: framework-native validator network
+- Security layer: remote signer, double-sign protection, secrets management, audit logging
+- Operations layer: monitoring, alerts, CI/CD, restore drills, and rollback
+
+## Important production constraints
+
+- The chain must not claim production status before a staging or testnet review passes.
+- Testnet tokens must be labeled as having no value and must not be offered as an incentive until legal review signs off.
+- The finality model, validator set policy, custody model, and sanctions posture must be recorded before launch.
+- Devnet keys must never be reused in staging or production-like environments.
 
 ## Bottom line
-The current repo is a credible prototype and a valuable product foundation, but if the goal is a production-ready blockchain, use a proven chain framework rather than depend on a custom Python implementation as the canonical runtime.
+
+If the objective is a credible, operationally safe launch path, choose a proven blockchain framework and use the current repo as a prototype, simulation environment, and migration pipeline. The custom Python chain is a good product prototype, but it should not be the default production runtime.

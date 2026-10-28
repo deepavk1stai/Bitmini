@@ -46,7 +46,7 @@ def public_key_hex_from_private(private_hex):
     return public.hex()
 
 
-def generate_devnet_genesis(validator_count=3):
+def generate_devnet_genesis(validator_count=4):
     accounts = []
     validators = []
     for index in range(validator_count):
@@ -123,15 +123,15 @@ def start_node(processes, node_id, port, genesis_path, peer_urls):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Start a local Bitmini PoS devnet with three validators.")
-    parser.add_argument("--count", type=int, default=3)
+    parser = argparse.ArgumentParser(description="Start a local Bitmini PoS devnet with four validators for fault-tolerance testing.")
+    parser.add_argument("--count", type=int, default=4)
     parser.add_argument("--base-port", type=int, default=9101)
     parser.add_argument("--duration", type=int, default=0)
     parser.add_argument("--auto-mine", action="store_true")
     args = parser.parse_args()
 
-    if args.count < 2:
-        raise SystemExit("Devnet requires at least 2 nodes.")
+    if args.count < 4:
+        raise SystemExit("Devnet requires at least 4 validators to tolerate a single-node failure.")
 
     genesis = generate_devnet_genesis(args.count)
     work_dir = ROOT / "network" / "tmp-devnet"

@@ -53,6 +53,8 @@ MAX_SUPPLY = 21_000_000.0
 GENESIS_UNTOUCHABLE_SUPPLY = 1_000_000.0
 COIN_DECIMALS = 9
 BASE_NETWORK_PRICE = 0.0
+MIN_LOCAL_DEVNET_VALIDATORS = 4
+TESTNET_VALUE_CLAIM = "no-value testnet"
 DEFAULT_CONSENSUS_MODE = "pos"
 DEFAULT_PHASE = "B"
 DEFAULT_TESTNET_STATUS = "seed-network-bootstrap"
@@ -505,7 +507,16 @@ def node_rpc_enabled():
 def build_local_devnet_command(count=3, base_port=9101, auto_mine=True, duration=8):
     if not os.path.exists(LOCAL_DEVNET_SCRIPT):
         return None
-    command = [sys.executable, LOCAL_DEVNET_SCRIPT, "--count", str(int(count or 3)), "--base-port", str(int(base_port or 9101))]
+
+    normalized_count = max(int(count or MIN_LOCAL_DEVNET_VALIDATORS), MIN_LOCAL_DEVNET_VALIDATORS)
+    command = [
+        sys.executable,
+        LOCAL_DEVNET_SCRIPT,
+        "--count",
+        str(normalized_count),
+        "--base-port",
+        str(int(base_port or 9101)),
+    ]
     if auto_mine:
         command.append("--auto-mine")
     if duration is not None:
@@ -538,7 +549,14 @@ def stop_local_devnet():
 
 
 def start_local_devnet(count=3, base_port=9101, auto_mine=True, duration=8, dry_run=False):
-    command = build_local_devnet_command(count=count, base_port=base_port, auto_mine=auto_mine, duration=duration)
+    normalized_count = max(int(count or MIN_LOCAL_DEVNET_VALIDATORS), MIN_LOCAL_DEVNET_VALIDATORS)
+    if int(count or 0) < MIN_LOCAL_DEVNET_VALIDATORS:
+        return {
+            "ok": False,
+            "error": f"Local validator testnet must use at least {MIN_LOCAL_DEVNET_VALIDATORS} validators to tolerate a single-node failure.",
+        }
+
+    command = build_local_devnet_command(count=normalized_count, base_port=base_port, auto_mine=auto_mine, duration=duration)
     if command is None:
         return {"ok": False, "error": "Local devnet launcher script is missing."}
 
@@ -548,7 +566,7 @@ def start_local_devnet(count=3, base_port=9101, auto_mine=True, duration=8, dry_
             "started": False,
             "dry_run": True,
             "command": " ".join(command),
-            "count": int(count or 3),
+            "count": normalized_count,
             "basePort": int(base_port or 9101),
             "autoMine": bool(auto_mine),
             "duration": int(duration or 8),
@@ -580,7 +598,7 @@ def start_local_devnet(count=3, base_port=9101, auto_mine=True, duration=8, dry_
         "dry_run": False,
         "pid": process.pid,
         "command": " ".join(command),
-        "count": int(count or 3),
+        "count": normalized_count,
         "basePort": int(base_port or 9101),
         "autoMine": bool(auto_mine),
         "duration": int(duration or 8),
@@ -1940,13 +1958,16 @@ def network_devnet_status():
     local_devnet = {
         "enabled": bool(os.environ.get("BITMINI_LOCAL_DEVNET") == "1") or running,
         "running": running,
-        "validatorCount": int(os.environ.get("BITMINI_LOCAL_DEVNET_COUNT", "3") or "3"),
+        "validatorCount": max(int(os.environ.get("BITMINI_LOCAL_DEVNET_COUNT", str(MIN_LOCAL_DEVNET_VALIDATORS)) or str(MIN_LOCAL_DEVNET_VALIDATORS)), MIN_LOCAL_DEVNET_VALIDATORS),
         "basePort": int(os.environ.get("BITMINI_LOCAL_DEVNET_PORT", "9101") or "9101"),
         "chainId": str(os.environ.get("BITMINI_CHAIN_ID", DEFAULT_CHAIN_ID)).strip() or DEFAULT_CHAIN_ID,
-        "launcher": "python network/local_devnet.py --count 3 --base-port 9101 --auto-mine",
-        "description": "Three-node local PoS devnet for validator rotation and block production testing.",
+        "launcher": "python network/local_devnet.py --count 4 --base-port 9101 --auto-mine",
+        "description": "Four-validator local PoS devnet for validator rotation, fault tolerance, and staging-safety testing.",
         "nodes": [{"pid": process.pid, "status": "running"} for process in processes],
         "activeProcesses": len(processes),
+        "runtimeRecommendation": "Framework-backed chain runtime recommended for production; Python prototype remains a staging-only validator lab.",
+        "testnetValueClaim": TESTNET_VALUE_CLAIM,
+        "minimumValidatorCount": MIN_LOCAL_DEVNET_VALIDATORS,
     }
     return jsonify({"ok": True, "devnet": local_devnet, "status": "prototype", "running": running})
 
@@ -1958,7 +1979,12 @@ def network_devnet_start():
     if auth_error:
         return auth_error
 
-    count = int(payload.get("count", 3) or 3)
+    count = int(payload.get("count", MIN_LOCAL_DEVNET_VALIDATORS) or MIN_LOCAL_DEVNET_VALIDATORS)
+    if count < MIN_LOCAL_DEVNET_VALIDATORS:
+        return jsonify({
+            "ok": False,
+            "error": f"Local validator testnet must use at least {MIN_LOCAL_DEVNET_VALIDATORS} validators to tolerate a single-node failure.",
+        }), 400
     base_port = int(payload.get("basePort", 9101) or 9101)
     auto_mine = bool(payload.get("autoMine", payload.get("auto_mine", True)))
     duration = int(payload.get("duration", 8) or 8)
